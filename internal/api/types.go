@@ -54,7 +54,6 @@ type Execution struct {
 	ID                string          `json:"id"`
 	FunctionID        string          `json:"function_id"`
 	FunctionVersionID string          `json:"function_version_id"`
-	ExecutionID       string          `json:"execution_id"`
 	Status            ExecutionStatus `json:"status"`
 	DurationMs        *int64          `json:"duration_ms,omitempty"`
 	ErrorMessage      *string         `json:"error_message,omitempty"`
@@ -73,7 +72,7 @@ type LogEntry struct {
 	ExecutionID string   `json:"execution_id"`
 	Level       LogLevel `json:"level"`
 	Message     string   `json:"message"`
-	Timestamp   int64    `json:"timestamp"`
+	CreatedAt   int64    `json:"created_at"`
 }
 
 // DiffLine represents a line in a version diff
@@ -140,4 +139,62 @@ type VersionDiffResponse struct {
 // ErrorResponse is the standard error response
 type ErrorResponse struct {
 	Error string `json:"error"`
+}
+
+// PaginationParams contains pagination parameters
+type PaginationParams struct {
+	Limit  int // Number of items per page (default: 20, max: 100)
+	Offset int // Number of items to skip (default: 0)
+}
+
+// Normalize applies defaults and constraints to pagination parameters
+func (p PaginationParams) Normalize() PaginationParams {
+	if p.Limit <= 0 {
+		p.Limit = 20 // Default
+	}
+	if p.Limit > 100 {
+		p.Limit = 100 // Max
+	}
+	if p.Offset < 0 {
+		p.Offset = 0
+	}
+	return p
+}
+
+// PaginationInfo contains pagination metadata
+type PaginationInfo struct {
+	Total  int64 `json:"total"`  // Total number of items
+	Limit  int   `json:"limit"`  // Items per page
+	Offset int   `json:"offset"` // Items skipped
+}
+
+// PaginatedFunctionsResponse is the paginated response for listing functions
+type PaginatedFunctionsResponse struct {
+	Functions  []FunctionWithActiveVersion `json:"functions"`
+	Pagination PaginationInfo              `json:"pagination"`
+}
+
+// PaginatedVersionsResponse is the paginated response for listing versions
+type PaginatedVersionsResponse struct {
+	Versions   []FunctionVersion `json:"versions"`
+	Pagination PaginationInfo    `json:"pagination"`
+}
+
+// PaginatedExecutionsResponse is the paginated response for listing executions
+type PaginatedExecutionsResponse struct {
+	Executions []ExecutionWithLogCount `json:"executions"`
+	Pagination PaginationInfo          `json:"pagination"`
+}
+
+// PaginatedLogsResponse is the paginated response for listing logs
+type PaginatedLogsResponse struct {
+	Logs       []LogEntry     `json:"logs"`
+	Pagination PaginationInfo `json:"pagination"`
+}
+
+// PaginatedExecutionWithLogs includes execution details with paginated logs
+type PaginatedExecutionWithLogs struct {
+	Execution
+	Logs       []LogEntry     `json:"logs"`
+	Pagination PaginationInfo `json:"pagination"`
 }

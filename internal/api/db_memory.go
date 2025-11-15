@@ -12,7 +12,7 @@ type MemoryDB struct {
 	mu         sync.RWMutex
 	functions  map[string]Function
 	versions   map[string][]FunctionVersion // functionID -> versions
-	executions map[string]Execution         // executionID -> execution
+	executions map[string]Execution         // id -> execution
 	logs       map[string][]LogEntry        // executionID -> logs
 }
 
@@ -53,15 +53,33 @@ func (db *MemoryDB) GetFunction(ctx context.Context, id string) (Function, error
 	return fn, nil
 }
 
-func (db *MemoryDB) ListFunctions(ctx context.Context) ([]Function, error) {
+func (db *MemoryDB) ListFunctions(ctx context.Context, params PaginationParams) ([]Function, int64, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
-	functions := make([]Function, 0, len(db.functions))
+	// Normalize pagination parameters
+	params = params.Normalize()
+
+	// Get all functions first
+	allFunctions := make([]Function, 0, len(db.functions))
 	for _, fn := range db.functions {
-		functions = append(functions, fn)
+		allFunctions = append(allFunctions, fn)
 	}
-	return functions, nil
+
+	total := int64(len(allFunctions))
+
+	// Apply pagination
+	start := params.Offset
+	if start > len(allFunctions) {
+		return []Function{}, total, nil
+	}
+
+	end := start + params.Limit
+	if end > len(allFunctions) {
+		end = len(allFunctions)
+	}
+
+	return allFunctions[start:end], total, nil
 }
 
 func (db *MemoryDB) UpdateFunction(ctx context.Context, id string, updates UpdateFunctionRequest) error {
@@ -176,22 +194,38 @@ func (db *MemoryDB) GetVersionByID(ctx context.Context, versionID string) (Funct
 	return FunctionVersion{}, fmt.Errorf("version not found")
 }
 
-func (db *MemoryDB) ListVersions(ctx context.Context, functionID string) ([]FunctionVersion, error) {
+func (db *MemoryDB) ListVersions(ctx context.Context, functionID string, params PaginationParams) ([]FunctionVersion, int64, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
+	// Normalize pagination parameters
+	params = params.Normalize()
+
 	versions := db.versions[functionID]
 	if versions == nil {
-		return []FunctionVersion{}, nil
+		return []FunctionVersion{}, 0, nil
 	}
 
 	// Return in reverse order (newest first)
-	result := make([]FunctionVersion, len(versions))
+	allVersions := make([]FunctionVersion, len(versions))
 	for i, v := range versions {
-		result[len(versions)-1-i] = v
+		allVersions[len(versions)-1-i] = v
 	}
 
-	return result, nil
+	total := int64(len(allVersions))
+
+	// Apply pagination
+	start := params.Offset
+	if start > len(allVersions) {
+		return []FunctionVersion{}, total, nil
+	}
+
+	end := start + params.Limit
+	if end > len(allVersions) {
+		end = len(allVersions)
+	}
+
+	return allVersions[start:end], total, nil
 }
 
 func (db *MemoryDB) GetActiveVersion(ctx context.Context, functionID string) (FunctionVersion, error) {
@@ -239,7 +273,7 @@ func (db *MemoryDB) CreateExecution(ctx context.Context, exec Execution) (Execut
 	defer db.mu.Unlock()
 
 	exec.CreatedAt = time.Now().Unix()
-	db.executions[exec.ExecutionID] = exec
+	db.executions[exec.ID] = exec
 	return exec, nil
 }
 
@@ -271,27 +305,38 @@ func (db *MemoryDB) UpdateExecution(ctx context.Context, executionID string, sta
 	return nil
 }
 
-func (db *MemoryDB) ListExecutions(ctx context.Context, functionID string, limit int) ([]ExecutionWithLogCount, error) {
+func (db *MemoryDB) ListExecutions(ctx context.Context, functionID string, params PaginationParams) ([]ExecutionWithLogCount, int64, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
-	var executions []ExecutionWithLogCount
+	// Normalize pagination parameters
+	params = params.Normalize()
+
+	var allExecutions []ExecutionWithLogCount
 	for _, exec := range db.executions {
 		if exec.FunctionID == functionID {
-			logCount := int64(len(db.logs[exec.ExecutionID]))
-			executions = append(executions, ExecutionWithLogCount{
+			logCount := int64(len(db.logs[exec.ID]))
+			allExecutions = append(allExecutions, ExecutionWithLogCount{
 				Execution: exec,
 				LogCount:  logCount,
 			})
 		}
 	}
 
-	// Apply limit
-	if limit > 0 && len(executions) > limit {
-		executions = executions[:limit]
+	total := int64(len(allExecutions))
+
+	// Apply pagination
+	start := params.Offset
+	if start > len(allExecutions) {
+		return []ExecutionWithLogCount{}, total, nil
 	}
 
-	return executions, nil
+	end := start + params.Limit
+	if end > len(allExecutions) {
+		end = len(allExecutions)
+	}
+
+	return allExecutions[start:end], total, nil
 }
 
 // Log operations
@@ -300,20 +345,37 @@ func (db *MemoryDB) CreateLog(ctx context.Context, log LogEntry) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	log.Timestamp = time.Now().Unix()
+	log.CreatedAt = time.Now().Unix()
 	db.logs[log.ExecutionID] = append(db.logs[log.ExecutionID], log)
 	return nil
 }
 
-func (db *MemoryDB) GetExecutionLogs(ctx context.Context, executionID string) ([]LogEntry, error) {
+func (db *MemoryDB) GetExecutionLogs(ctx context.Context, executionID string, params PaginationParams) ([]LogEntry, int64, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
+	// Normalize pagination parameters
+	params = params.Normalize()
+
 	logs := db.logs[executionID]
 	if logs == nil {
-		return []LogEntry{}, nil
+		return []LogEntry{}, 0, nil
 	}
-	return logs, nil
+
+	total := int64(len(logs))
+
+	// Apply pagination
+	start := params.Offset
+	if start > len(logs) {
+		return []LogEntry{}, total, nil
+	}
+
+	end := start + params.Limit
+	if end > len(logs) {
+		end = len(logs)
+	}
+
+	return logs[start:end], total, nil
 }
 
 func (db *MemoryDB) GetLogCount(ctx context.Context, executionID string) (int64, error) {

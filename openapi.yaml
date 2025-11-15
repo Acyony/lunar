@@ -1,4 +1,4 @@
-openapi: 3.0.4
+openapi: 3.1.1
 info:
   title: FaaS Application API
   description: |
@@ -71,8 +71,28 @@ paths:
       tags:
         - Functions
       summary: List all functions
-      description: Returns a list of all functions with their active versions
+      description: Returns a paginated list of all functions with their active versions
       operationId: listFunctions
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of items to return (default 20, max 100)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+        - name: offset
+          in: query
+          description: Number of items to skip
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+            example: 0
       responses:
         "200":
           description: List of functions retrieved successfully
@@ -195,8 +215,28 @@ paths:
       tags:
         - Versions
       summary: List all versions of a function
-      description: Returns all versions of a function in descending order (newest first)
+      description: Returns a paginated list of all versions of a function in descending order (newest first)
       operationId: listVersions
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of items to return (default 20, max 100)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+        - name: offset
+          in: query
+          description: Number of items to skip
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+            example: 0
       responses:
         "200":
           description: Versions retrieved successfully
@@ -385,8 +425,28 @@ paths:
       tags:
         - Executions
       summary: List executions of a function
-      description: Returns the execution history for a function (up to 100 most recent)
+      description: Returns a paginated list of execution history for a function
       operationId: listExecutions
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of items to return (default 20, max 100)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+        - name: offset
+          in: query
+          description: Number of items to skip
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+            example: 0
       responses:
         "200":
           description: Executions retrieved successfully
@@ -450,8 +510,28 @@ paths:
       tags:
         - Executions
       summary: Get execution logs
-      description: Returns the execution details along with all logs generated during execution
+      description: Returns the execution details along with paginated logs generated during execution
       operationId: getExecutionLogs
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of log entries to return (default 20, max 100)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+        - name: offset
+          in: query
+          description: Number of log entries to skip
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+            example: 0
       responses:
         "200":
           description: Execution logs retrieved successfully
@@ -827,7 +907,7 @@ components:
         - execution_id
         - level
         - message
-        - timestamp
+        - created_at
       properties:
         id:
           type: string
@@ -850,7 +930,7 @@ components:
           type: string
           description: Log message content
           example: "Processing request for user 123"
-        timestamp:
+        created_at:
           type: integer
           format: int64
           description: Unix timestamp when log was created
@@ -959,31 +1039,40 @@ components:
       type: object
       required:
         - functions
+        - pagination
       properties:
         functions:
           type: array
           items:
             $ref: "#/components/schemas/FunctionWithActiveVersion"
+        pagination:
+          $ref: "#/components/schemas/PaginationInfo"
 
     ListVersionsResponse:
       type: object
       required:
         - versions
+        - pagination
       properties:
         versions:
           type: array
           items:
             $ref: "#/components/schemas/FunctionVersion"
+        pagination:
+          $ref: "#/components/schemas/PaginationInfo"
 
     ListExecutionsResponse:
       type: object
       required:
         - executions
+        - pagination
       properties:
         executions:
           type: array
           items:
             $ref: "#/components/schemas/ExecutionWithLogCount"
+        pagination:
+          $ref: "#/components/schemas/PaginationInfo"
 
     ExecutionWithLogs:
       allOf:
@@ -991,11 +1080,14 @@ components:
         - type: object
           required:
             - logs
+            - pagination
           properties:
             logs:
               type: array
               items:
                 $ref: "#/components/schemas/LogEntry"
+            pagination:
+              $ref: "#/components/schemas/PaginationInfo"
 
     VersionDiffResponse:
       type: object
@@ -1027,3 +1119,24 @@ components:
           type: string
           description: Error message
           example: "Function not found"
+
+    PaginationInfo:
+      type: object
+      required:
+        - total
+        - limit
+        - offset
+      properties:
+        total:
+          type: integer
+          format: int64
+          description: Total number of items available
+          example: 42
+        limit:
+          type: integer
+          description: Number of items per page
+          example: 20
+        offset:
+          type: integer
+          description: Number of items skipped
+          example: 0
