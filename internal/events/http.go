@@ -9,8 +9,13 @@ type HTTPEvent struct {
 	Query   map[string]string `json:"query"`
 }
 
-// Response represents the response from a Lua function handler
-type Response struct {
+// Type returns the event type for HTTPEvent
+func (h HTTPEvent) Type() EventType {
+	return EventTypeHTTP
+}
+
+// HTTPResponse represents the HTTP response from a Lua function handler
+type HTTPResponse struct {
 	StatusCode      int               `json:"statusCode"`
 	Headers         map[string]string `json:"headers"`
 	Body            string            `json:"body"`
