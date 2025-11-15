@@ -2,6 +2,7 @@ import { Icons } from "../icons.js";
 import { API } from "../api.js";
 import { IdPill } from "../components/id-pill.js";
 import { Pagination } from "../components/pagination.js";
+import { formatUnixTimestamp } from "../utils.js";
 
 export const ExecutionDetail = {
   execution: null,
@@ -128,7 +129,7 @@ export const ExecutionDetail = {
             ]),
             m("tr", [
               m("td", m("strong", "Created")),
-              m("td", new Date(exec.created_at * 1000).toLocaleString()),
+              m("td", formatUnixTimestamp(exec.created_at)),
             ]),
             exec.error_message &&
               m("tr", [
@@ -180,7 +181,7 @@ export const ExecutionDetail = {
                       style:
                         "font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace; font-size: 12px; color: #a3a3a3;",
                     },
-                    new Date(log.created_at * 1000).toLocaleTimeString(),
+                    formatUnixTimestamp(log.created_at, "time"),
                   ),
                   m(
                     "td",

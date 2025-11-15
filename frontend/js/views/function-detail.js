@@ -5,6 +5,7 @@ import { IdPill } from "../components/id-pill.js";
 import { CodeEditor } from "../components/code-editor.js";
 import { CodeExamples } from "../components/code-examples.js";
 import { Pagination } from "../components/pagination.js";
+import { formatUnixTimestamp } from "../utils.js";
 
 export const FunctionDetail = {
   func: null,
@@ -286,11 +287,11 @@ export const FunctionDetail = {
               ]),
               m("tr", [
                 m("td", m("strong", "Created")),
-                m("td", new Date(func.created_at).toLocaleString()),
+                m("td", formatUnixTimestamp(func.created_at)),
               ]),
               m("tr", [
                 m("td", m("strong", "Updated")),
-                m("td", new Date(func.updated_at).toLocaleString()),
+                m("td", formatUnixTimestamp(func.updated_at)),
               ]),
             ]),
           ]),
@@ -398,7 +399,7 @@ export const FunctionDetail = {
                           }),
                         ),
                         m("td", m(".badge", `v${v.version}`)),
-                        m("td", new Date(v.created_at).toLocaleString()),
+                        m("td", formatUnixTimestamp(v.created_at)),
                         m(
                           "td",
                           v.is_active
@@ -473,10 +474,7 @@ export const FunctionDetail = {
                           "td",
                           exec.duration_ms ? `${exec.duration_ms}ms` : "N/A",
                         ),
-                        m(
-                          "td",
-                          new Date(exec.created_at * 1000).toLocaleString(),
-                        ),
+                        m("td", formatUnixTimestamp(exec.created_at)),
                         m(
                           "td.td-actions",
                           m(
@@ -635,7 +633,7 @@ export const FunctionDetail = {
                                     style:
                                       "font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace; font-size: 12px; color: #a3a3a3;",
                                   },
-                                  new Date(log.timestamp).toLocaleTimeString(),
+                                  formatUnixTimestamp(log.created_at, "time"),
                                 ),
                                 m(
                                   "td",
