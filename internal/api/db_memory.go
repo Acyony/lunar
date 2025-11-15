@@ -114,21 +114,6 @@ func (db *MemoryDB) DeleteFunction(ctx context.Context, id string) error {
 	return nil
 }
 
-func (db *MemoryDB) UpdateFunctionEnvVars(ctx context.Context, id string, envVars map[string]string) error {
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
-	fn, ok := db.functions[id]
-	if !ok {
-		return fmt.Errorf("function not found")
-	}
-
-	fn.EnvVars = envVars
-	fn.UpdatedAt = time.Now().Unix()
-	db.functions[id] = fn
-	return nil
-}
-
 // Version operations
 
 func (db *MemoryDB) CreateVersion(ctx context.Context, functionID string, code string, createdBy *string) (FunctionVersion, error) {

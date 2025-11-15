@@ -174,7 +174,7 @@ func ListFunctionsHandler(db DB) http.HandlerFunc {
 }
 
 // GetFunctionHandler returns a handler for getting a specific function
-func GetFunctionHandler(db DB) http.HandlerFunc {
+func GetFunctionHandler(db DB, envStore env.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("id")
 
@@ -189,6 +189,14 @@ func GetFunctionHandler(db DB) http.HandlerFunc {
 			writeError(w, http.StatusInternalServerError, "No active version found")
 			return
 		}
+
+		// Get env vars from env store
+		envVars, err := envStore.All(id)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to get env vars")
+			return
+		}
+		fn.EnvVars = envVars
 
 		resp := FunctionWithActiveVersion{
 			Function:      fn,
@@ -247,7 +255,7 @@ func DeleteFunctionHandler(db DB) http.HandlerFunc {
 }
 
 // UpdateEnvVarsHandler returns a handler for updating environment variables
-func UpdateEnvVarsHandler(db DB) http.HandlerFunc {
+func UpdateEnvVarsHandler(db DB, envStore env.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("id")
 
@@ -257,17 +265,36 @@ func UpdateEnvVarsHandler(db DB) http.HandlerFunc {
 			return
 		}
 
-		// Get the current function
+		// Verify function exists
 		_, err := db.GetFunction(r.Context(), id)
 		if err != nil {
 			writeError(w, http.StatusNotFound, "Function not found")
 			return
 		}
 
-		// Update the environment variables
-		if err := db.UpdateFunctionEnvVars(r.Context(), id, req.EnvVars); err != nil {
-			writeError(w, http.StatusInternalServerError, "Failed to update environment variables")
+		// Get current env vars from env store
+		currentEnvVars, err := envStore.All(id)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to get current env vars")
 			return
+		}
+
+		// Delete removed env vars
+		for key := range currentEnvVars {
+			if _, exists := req.EnvVars[key]; !exists {
+				if err := envStore.Delete(id, key); err != nil {
+					writeError(w, http.StatusInternalServerError, "Failed to delete env var")
+					return
+				}
+			}
+		}
+
+		// Set new/updated env vars
+		for key, value := range req.EnvVars {
+			if err := envStore.Set(id, key, value); err != nil {
+				writeError(w, http.StatusInternalServerError, "Failed to set env var")
+				return
+			}
 		}
 
 		// Get the active version to return

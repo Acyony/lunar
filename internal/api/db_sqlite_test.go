@@ -96,9 +96,6 @@ func TestSQLiteDB_GetFunction(t *testing.T) {
 	if retrieved.Name != fn.Name {
 		t.Errorf("Expected Name %s, got %s", fn.Name, retrieved.Name)
 	}
-	if retrieved.EnvVars["API_KEY"] != "secret" {
-		t.Error("Expected EnvVars to be retrieved correctly")
-	}
 }
 
 func TestSQLiteDB_GetFunction_NotFound(t *testing.T) {
@@ -220,50 +217,6 @@ func TestSQLiteDB_DeleteFunction(t *testing.T) {
 	_, err := sqliteDB.GetFunction(ctx, fn.ID)
 	if err == nil {
 		t.Error("Expected error when getting deleted function")
-	}
-}
-
-func TestSQLiteDB_UpdateFunctionEnvVars(t *testing.T) {
-	db, sqliteDB := setupTestDB(t)
-	defer func() { _ = db.Close() }()
-
-	ctx := context.Background()
-
-	// Create a function
-	fn := Function{
-		ID:      "func_env_123",
-		Name:    "env-test",
-		EnvVars: map[string]string{"OLD_KEY": "old_value"},
-	}
-
-	if _, err := sqliteDB.CreateFunction(ctx, fn); err != nil {
-		t.Fatalf("CreateFunction failed: %v", err)
-	}
-
-	// Update env vars
-	newEnvVars := map[string]string{
-		"NEW_KEY": "new_value",
-		"API_URL": "https://example.com",
-	}
-
-	if err := sqliteDB.UpdateFunctionEnvVars(ctx, fn.ID, newEnvVars); err != nil {
-		t.Fatalf("UpdateFunctionEnvVars failed: %v", err)
-	}
-
-	// Verify
-	updated, err := sqliteDB.GetFunction(ctx, fn.ID)
-	if err != nil {
-		t.Fatalf("GetFunction failed: %v", err)
-	}
-
-	if updated.EnvVars["NEW_KEY"] != "new_value" {
-		t.Error("Expected NEW_KEY to be set")
-	}
-	if updated.EnvVars["API_URL"] != "https://example.com" {
-		t.Error("Expected API_URL to be set")
-	}
-	if _, exists := updated.EnvVars["OLD_KEY"]; exists {
-		t.Error("Expected OLD_KEY to be removed")
 	}
 }
 

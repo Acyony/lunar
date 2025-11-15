@@ -58,10 +58,10 @@ func (s *Server) setupRoutes() {
 	// Function Management - only need DB
 	s.mux.HandleFunc("POST /api/functions", CreateFunctionHandler(s.db))
 	s.mux.HandleFunc("GET /api/functions", ListFunctionsHandler(s.db))
-	s.mux.HandleFunc("GET /api/functions/{id}", GetFunctionHandler(s.db))
+	s.mux.HandleFunc("GET /api/functions/{id}", GetFunctionHandler(s.db, s.execDeps.EnvStore))
 	s.mux.HandleFunc("PUT /api/functions/{id}", UpdateFunctionHandler(s.db))
 	s.mux.HandleFunc("DELETE /api/functions/{id}", DeleteFunctionHandler(s.db))
-	s.mux.HandleFunc("PUT /api/functions/{id}/env", UpdateEnvVarsHandler(s.db))
+	s.mux.HandleFunc("PUT /api/functions/{id}/env", UpdateEnvVarsHandler(s.db, s.execDeps.EnvStore))
 
 	// Version Management - only need DB
 	s.mux.HandleFunc("GET /api/functions/{id}/versions", ListVersionsHandler(s.db))

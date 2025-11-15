@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -27,7 +26,6 @@ func Migrate(db *sql.DB) error {
 		id TEXT PRIMARY KEY,
 		name TEXT NOT NULL,
 		description TEXT,
-		env_vars TEXT NOT NULL DEFAULT '{}',
 		created_at INTEGER NOT NULL,
 		updated_at INTEGER NOT NULL
 	);
@@ -79,15 +77,10 @@ func (db *SQLiteDB) CreateFunction(ctx context.Context, fn Function) (Function, 
 		fn.EnvVars = make(map[string]string)
 	}
 
-	envVarsJSON, err := json.Marshal(fn.EnvVars)
-	if err != nil {
-		return Function{}, fmt.Errorf("failed to marshal env vars: %w", err)
-	}
+	query := `INSERT INTO functions (id, name, description, created_at, updated_at)
+	          VALUES (?, ?, ?, ?, ?)`
 
-	query := `INSERT INTO functions (id, name, description, env_vars, created_at, updated_at)
-	          VALUES (?, ?, ?, ?, ?, ?)`
-
-	_, err = db.db.ExecContext(ctx, query, fn.ID, fn.Name, fn.Description, string(envVarsJSON), fn.CreatedAt, fn.UpdatedAt)
+	_, err := db.db.ExecContext(ctx, query, fn.ID, fn.Name, fn.Description, fn.CreatedAt, fn.UpdatedAt)
 	if err != nil {
 		return Function{}, fmt.Errorf("failed to insert function: %w", err)
 	}
@@ -96,15 +89,14 @@ func (db *SQLiteDB) CreateFunction(ctx context.Context, fn Function) (Function, 
 }
 
 func (db *SQLiteDB) GetFunction(ctx context.Context, id string) (Function, error) {
-	query := `SELECT id, name, description, env_vars, created_at, updated_at
+	query := `SELECT id, name, description, created_at, updated_at
 	          FROM functions WHERE id = ?`
 
 	var fn Function
-	var envVarsJSON string
 	var description sql.NullString
 
 	err := db.db.QueryRowContext(ctx, query, id).Scan(
-		&fn.ID, &fn.Name, &description, &envVarsJSON, &fn.CreatedAt, &fn.UpdatedAt,
+		&fn.ID, &fn.Name, &description, &fn.CreatedAt, &fn.UpdatedAt,
 	)
 	if err == sql.ErrNoRows {
 		return Function{}, fmt.Errorf("function not found")
@@ -117,9 +109,7 @@ func (db *SQLiteDB) GetFunction(ctx context.Context, id string) (Function, error
 		fn.Description = &description.String
 	}
 
-	if err := json.Unmarshal([]byte(envVarsJSON), &fn.EnvVars); err != nil {
-		return Function{}, fmt.Errorf("failed to unmarshal env vars: %w", err)
-	}
+	fn.EnvVars = make(map[string]string)
 
 	return fn, nil
 }
@@ -135,7 +125,7 @@ func (db *SQLiteDB) ListFunctions(ctx context.Context, params PaginationParams) 
 	// Normalize pagination parameters
 	params = params.Normalize()
 
-	query := `SELECT id, name, description, env_vars, created_at, updated_at
+	query := `SELECT id, name, description, created_at, updated_at
 	          FROM functions
 	          ORDER BY created_at DESC
 	          LIMIT ? OFFSET ?`
@@ -149,10 +139,9 @@ func (db *SQLiteDB) ListFunctions(ctx context.Context, params PaginationParams) 
 	var functions []Function
 	for rows.Next() {
 		var fn Function
-		var envVarsJSON string
 		var description sql.NullString
 
-		if err := rows.Scan(&fn.ID, &fn.Name, &description, &envVarsJSON, &fn.CreatedAt, &fn.UpdatedAt); err != nil {
+		if err := rows.Scan(&fn.ID, &fn.Name, &description, &fn.CreatedAt, &fn.UpdatedAt); err != nil {
 			return nil, 0, fmt.Errorf("failed to scan function: %w", err)
 		}
 
@@ -160,9 +149,7 @@ func (db *SQLiteDB) ListFunctions(ctx context.Context, params PaginationParams) 
 			fn.Description = &description.String
 		}
 
-		if err := json.Unmarshal([]byte(envVarsJSON), &fn.EnvVars); err != nil {
-			return nil, 0, fmt.Errorf("failed to unmarshal env vars: %w", err)
-		}
+		fn.EnvVars = make(map[string]string)
 
 		functions = append(functions, fn)
 	}
@@ -210,31 +197,6 @@ func (db *SQLiteDB) DeleteFunction(ctx context.Context, id string) error {
 	result, err := db.db.ExecContext(ctx, "DELETE FROM functions WHERE id = ?", id)
 	if err != nil {
 		return fmt.Errorf("failed to delete function: %w", err)
-	}
-
-	rows, err := result.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("failed to get rows affected: %w", err)
-	}
-
-	if rows == 0 {
-		return fmt.Errorf("function not found")
-	}
-
-	return nil
-}
-
-func (db *SQLiteDB) UpdateFunctionEnvVars(ctx context.Context, id string, envVars map[string]string) error {
-	envVarsJSON, err := json.Marshal(envVars)
-	if err != nil {
-		return fmt.Errorf("failed to marshal env vars: %w", err)
-	}
-
-	result, err := db.db.ExecContext(ctx,
-		"UPDATE functions SET env_vars = ?, updated_at = ? WHERE id = ?",
-		string(envVarsJSON), time.Now().Unix(), id)
-	if err != nil {
-		return fmt.Errorf("failed to update env vars: %w", err)
 	}
 
 	rows, err := result.RowsAffected()

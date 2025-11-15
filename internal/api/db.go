@@ -10,7 +10,6 @@ type DB interface {
 	ListFunctions(ctx context.Context, params PaginationParams) ([]Function, int64, error)
 	UpdateFunction(ctx context.Context, id string, updates UpdateFunctionRequest) error
 	DeleteFunction(ctx context.Context, id string) error
-	UpdateFunctionEnvVars(ctx context.Context, id string, envVars map[string]string) error
 
 	// Version operations
 	CreateVersion(ctx context.Context, functionID string, code string, createdBy *string) (FunctionVersion, error)
