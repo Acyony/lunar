@@ -1,2 +1,3 @@
-// Package kv provides a simple in-memory key-value store with basic operations.
+// Package kv provides key-value storage with namespace isolation.
+// Supports both in-memory and SQLite-backed implementations.
 package kv

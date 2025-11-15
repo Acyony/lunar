@@ -1,2 +1,3 @@
-// Package events contains types for the envents that can be handled by the lua functions.
+// Package events contains types for events that can be handled by Lua functions.
+// Currently supports HTTP event types.
 package events
