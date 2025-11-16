@@ -17,6 +17,7 @@ type Server struct {
 	execDeps        *ExecuteFunctionDeps
 	logger          logger.Logger
 	frontendHandler http.Handler
+	apiKey          string
 }
 
 // ServerConfig holds configuration for creating a Server
@@ -28,6 +29,7 @@ type ServerConfig struct {
 	HTTPClient       internalhttp.Client
 	ExecutionTimeout time.Duration
 	FrontendHandler  http.Handler
+	APIKey           string
 }
 
 // NewServer creates a new API server with full configuration
@@ -47,6 +49,7 @@ func NewServer(config ServerConfig) *Server {
 		execDeps:        execDeps,
 		logger:          config.Logger,
 		frontendHandler: config.FrontendHandler,
+		apiKey:          config.APIKey,
 	}
 
 	s.setupRoutes()
@@ -55,26 +58,33 @@ func NewServer(config ServerConfig) *Server {
 
 // setupRoutes configures all API routes using functional handlers
 func (s *Server) setupRoutes() {
+	// Auth routes (no authentication required)
+	s.mux.HandleFunc("POST /api/auth/login", HandleLogin(s.apiKey))
+	s.mux.HandleFunc("POST /api/auth/logout", HandleLogout())
+
+	// Protected API routes - wrap with auth middleware
+	authMiddleware := AuthMiddleware(s.apiKey)
+
 	// Function Management - only need DB
-	s.mux.HandleFunc("POST /api/functions", CreateFunctionHandler(s.db))
-	s.mux.HandleFunc("GET /api/functions", ListFunctionsHandler(s.db))
-	s.mux.HandleFunc("GET /api/functions/{id}", GetFunctionHandler(s.db, s.execDeps.EnvStore))
-	s.mux.HandleFunc("PUT /api/functions/{id}", UpdateFunctionHandler(s.db))
-	s.mux.HandleFunc("DELETE /api/functions/{id}", DeleteFunctionHandler(s.db))
-	s.mux.HandleFunc("PUT /api/functions/{id}/env", UpdateEnvVarsHandler(s.db, s.execDeps.EnvStore))
+	s.mux.Handle("POST /api/functions", authMiddleware(http.HandlerFunc(CreateFunctionHandler(s.db))))
+	s.mux.Handle("GET /api/functions", authMiddleware(http.HandlerFunc(ListFunctionsHandler(s.db))))
+	s.mux.Handle("GET /api/functions/{id}", authMiddleware(http.HandlerFunc(GetFunctionHandler(s.db, s.execDeps.EnvStore))))
+	s.mux.Handle("PUT /api/functions/{id}", authMiddleware(http.HandlerFunc(UpdateFunctionHandler(s.db))))
+	s.mux.Handle("DELETE /api/functions/{id}", authMiddleware(http.HandlerFunc(DeleteFunctionHandler(s.db))))
+	s.mux.Handle("PUT /api/functions/{id}/env", authMiddleware(http.HandlerFunc(UpdateEnvVarsHandler(s.db, s.execDeps.EnvStore))))
 
 	// Version Management - only need DB
-	s.mux.HandleFunc("GET /api/functions/{id}/versions", ListVersionsHandler(s.db))
-	s.mux.HandleFunc("GET /api/functions/{id}/versions/{version}", GetVersionHandler(s.db))
-	s.mux.HandleFunc("POST /api/functions/{id}/versions/{version}/activate", ActivateVersionHandler(s.db))
-	s.mux.HandleFunc("GET /api/functions/{id}/diff/{v1}/{v2}", GetVersionDiffHandler(s.db))
+	s.mux.Handle("GET /api/functions/{id}/versions", authMiddleware(http.HandlerFunc(ListVersionsHandler(s.db))))
+	s.mux.Handle("GET /api/functions/{id}/versions/{version}", authMiddleware(http.HandlerFunc(GetVersionHandler(s.db))))
+	s.mux.Handle("POST /api/functions/{id}/versions/{version}/activate", authMiddleware(http.HandlerFunc(ActivateVersionHandler(s.db))))
+	s.mux.Handle("GET /api/functions/{id}/diff/{v1}/{v2}", authMiddleware(http.HandlerFunc(GetVersionDiffHandler(s.db))))
 
 	// Execution History - only need DB
-	s.mux.HandleFunc("GET /api/functions/{id}/executions", ListExecutionsHandler(s.db))
-	s.mux.HandleFunc("GET /api/executions/{id}", GetExecutionHandler(s.db))
-	s.mux.HandleFunc("GET /api/executions/{id}/logs", GetExecutionLogsHandler(s.db, s.logger))
+	s.mux.Handle("GET /api/functions/{id}/executions", authMiddleware(http.HandlerFunc(ListExecutionsHandler(s.db))))
+	s.mux.Handle("GET /api/executions/{id}", authMiddleware(http.HandlerFunc(GetExecutionHandler(s.db))))
+	s.mux.Handle("GET /api/executions/{id}/logs", authMiddleware(http.HandlerFunc(GetExecutionLogsHandler(s.db, s.logger))))
 
-	// Runtime Execution - needs all dependencies
+	// Runtime Execution - needs all dependencies (NO AUTH - public endpoint)
 	executeHandler := ExecuteFunctionHandler(*s.execDeps)
 	s.mux.HandleFunc("GET /fn/{function_id}", executeHandler)
 	s.mux.HandleFunc("POST /fn/{function_id}", executeHandler)

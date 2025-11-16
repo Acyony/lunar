@@ -1,15 +1,26 @@
-import { Icons } from './icons.js';
-import { Toast } from './components/toast.js';
-import { FunctionsList } from './views/functions-list.js';
-import { FunctionCreate } from './views/function-create.js';
-import { FunctionDetail } from './views/function-detail.js';
-import { FunctionEdit } from './views/function-edit.js';
-import { FunctionEnv } from './views/function-env.js';
-import { ExecutionDetail } from './views/execution-detail.js';
-import { VersionDiff } from './views/version-diff.js';
+import { Icons } from "./icons.js";
+import { Toast } from "./components/toast.js";
+import { Login } from "./views/login.js";
+import { FunctionsList } from "./views/functions-list.js";
+import { FunctionCreate } from "./views/function-create.js";
+import { FunctionDetail } from "./views/function-detail.js";
+import { FunctionEdit } from "./views/function-edit.js";
+import { FunctionEnv } from "./views/function-env.js";
+import { ExecutionDetail } from "./views/execution-detail.js";
+import { VersionDiff } from "./views/version-diff.js";
+import { API } from "./api.js";
 
 // Layout component
 const Layout = {
+  handleLogout: async () => {
+    try {
+      await API.auth.logout();
+      m.route.set("/login");
+    } catch (e) {
+      console.error("Logout failed:", e);
+    }
+  },
+
   view: (vnode) => [
     m(
       "header",
@@ -18,6 +29,13 @@ const Layout = {
           Icons.moon(),
           " FaaS Dashboard",
         ]),
+        m(
+          "button.btn.btn-secondary",
+          {
+            onclick: Layout.handleLogout,
+          },
+          "Logout",
+        ),
       ]),
     ),
     m("main", vnode.children),
@@ -27,6 +45,9 @@ const Layout = {
 
 // Routes
 m.route(document.getElementById("app"), "/functions", {
+  "/login": {
+    render: () => m(Login),
+  },
   "/functions": {
     render: () => m(Layout, m(FunctionsList)),
   },

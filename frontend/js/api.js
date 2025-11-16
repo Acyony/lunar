@@ -1,20 +1,67 @@
+// Helper to add credentials to all requests
+const apiRequest = (config) => {
+  return m.request({
+    ...config,
+    // Include cookies in requests
+    credentials: "same-origin",
+  });
+};
+
+// Global error handler for auth failures
+const originalRequest = m.request;
+m.request = function (options) {
+  return originalRequest(options).catch((error) => {
+    // If we get a 401, redirect to login
+    if (error.code === 401) {
+      m.route.set("/login");
+    }
+    throw error;
+  });
+};
+
 export const API = {
+  // Authentication
+  auth: {
+    login: (apiKey) =>
+      // Use originalRequest to avoid the global 401 redirect
+      originalRequest({
+        method: "POST",
+        url: "/api/auth/login",
+        body: { apiKey },
+        credentials: "same-origin",
+      }).catch((err) => {
+        // Mithril parses JSON responses automatically
+        // On error, err.response contains the parsed JSON body
+        if (err.response && err.response.error) {
+          const error = new Error(err.response.error);
+          error.error = err.response.error;
+          throw error;
+        }
+        throw err;
+      }),
+    logout: () =>
+      apiRequest({
+        method: "POST",
+        url: "/api/auth/logout",
+      }),
+  },
+
   // Functions
   functions: {
     list: (limit = 20, offset = 0) =>
-      m.request({
+      apiRequest({
         method: "GET",
         url: `/api/functions?limit=${limit}&offset=${offset}`,
       }),
-    get: (id) => m.request({ method: "GET", url: `/api/functions/${id}` }),
+    get: (id) => apiRequest({ method: "GET", url: `/api/functions/${id}` }),
     create: (data) =>
-      m.request({ method: "POST", url: "/api/functions", body: data }),
+      apiRequest({ method: "POST", url: "/api/functions", body: data }),
     update: (id, data) =>
-      m.request({ method: "PUT", url: `/api/functions/${id}`, body: data }),
+      apiRequest({ method: "PUT", url: `/api/functions/${id}`, body: data }),
     delete: (id) =>
-      m.request({ method: "DELETE", url: `/api/functions/${id}` }),
+      apiRequest({ method: "DELETE", url: `/api/functions/${id}` }),
     updateEnv: (id, env_vars) =>
-      m.request({
+      apiRequest({
         method: "PUT",
         url: `/api/functions/${id}/env`,
         body: { env_vars },
@@ -24,22 +71,22 @@ export const API = {
   // Versions
   versions: {
     list: (functionId, limit = 20, offset = 0) =>
-      m.request({
+      apiRequest({
         method: "GET",
         url: `/api/functions/${functionId}/versions?limit=${limit}&offset=${offset}`,
       }),
     get: (functionId, version) =>
-      m.request({
+      apiRequest({
         method: "GET",
         url: `/api/functions/${functionId}/versions/${version}`,
       }),
     activate: (functionId, version) =>
-      m.request({
+      apiRequest({
         method: "POST",
         url: `/api/functions/${functionId}/versions/${version}/activate`,
       }),
     diff: (functionId, v1, v2) =>
-      m.request({
+      apiRequest({
         method: "GET",
         url: `/api/functions/${functionId}/diff/${v1}/${v2}`,
       }),
@@ -48,14 +95,14 @@ export const API = {
   // Executions
   executions: {
     list: (functionId, limit = 20, offset = 0) =>
-      m.request({
+      apiRequest({
         method: "GET",
         url: `/api/functions/${functionId}/executions?limit=${limit}&offset=${offset}`,
       }),
     get: (executionId) =>
-      m.request({ method: "GET", url: `/api/executions/${executionId}` }),
+      apiRequest({ method: "GET", url: `/api/executions/${executionId}` }),
     getLogs: (executionId, limit = 20, offset = 0) =>
-      m.request({
+      apiRequest({
         method: "GET",
         url: `/api/executions/${executionId}/logs?limit=${limit}&offset=${offset}`,
       }),

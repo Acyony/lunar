@@ -5,8 +5,6 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
-	"strconv"
-	"time"
 
 	"github.com/dimiro1/faas-go/frontend"
 	"github.com/dimiro1/faas-go/internal/api"
@@ -17,43 +15,16 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-type Config struct {
-	Port             string
-	DataDir          string
-	ExecutionTimeout time.Duration
-}
-
-func loadConfig(getenv func(string) string) Config {
-	port := getenv("PORT")
-	if port == "" {
-		port = "3000"
-	}
-
-	dataDir := getenv("DATA_DIR")
-	if dataDir == "" {
-		dataDir = "./data"
-	}
-
-	timeoutStr := getenv("EXECUTION_TIMEOUT")
-	timeout := 5 * time.Minute
-	if timeoutStr != "" {
-		if seconds, err := strconv.Atoi(timeoutStr); err == nil {
-			timeout = time.Duration(seconds) * time.Second
-		}
-	}
-
-	return Config{
-		Port:             port,
-		DataDir:          dataDir,
-		ExecutionTimeout: timeout,
-	}
-}
-
 func main() {
-	config := loadConfig(os.Getenv)
-
-	if err := os.MkdirAll(config.DataDir, 0o755); err != nil {
+	dataDir, err := initDataDir(os.Getenv)
+	if err != nil {
 		slog.Error("Failed to create data directory", "error", err)
+		os.Exit(1)
+	}
+
+	config, err := loadConfig(os.Getenv, dataDir)
+	if err != nil {
+		slog.Error("Failed to load config", "error", err)
 		os.Exit(1)
 	}
 
@@ -107,6 +78,7 @@ func main() {
 		HTTPClient:       httpClient,
 		ExecutionTimeout: config.ExecutionTimeout,
 		FrontendHandler:  frontend.Handler(),
+		APIKey:           config.APIKey,
 	})
 
 	addr := ":" + config.Port

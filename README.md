@@ -54,6 +54,16 @@ make build
 
 The API will be available at `http://localhost:3000` and the dashboard at `http://localhost:3000/`.
 
+### First-Time Setup
+
+On first run, FaaS-Go will automatically generate an API key and save it to `data/api_key.txt`. The key will be printed in the server logs:
+
+```
+INFO Generated new API key key=cf31cb0cdc7811ca9cec6a3c77579b3ea28c1e4e10d6fc1061ae71788834c21b file=data/api_key.txt
+```
+
+When you access the dashboard, you'll be prompted to enter this API key to login. The key is also available in the `data/api_key.txt` file.
+
 ## Writing Functions
 
 Functions are written in Lua and must export a `handler` function:
@@ -124,7 +134,26 @@ FaaS-Go can be configured via environment variables:
 PORT=3000                 # HTTP server port (default: 3000)
 DATA_DIR=./data           # Data directory for SQLite database (default: ./data)
 EXECUTION_TIMEOUT=300     # Function execution timeout in seconds (default: 300)
+API_KEY=your-key-here     # API key for authentication (auto-generated if not set)
 ```
+
+### Authentication
+
+The dashboard requires authentication via API key. You can:
+
+1. **Auto-generate** (recommended) - Let FaaS-Go generate a secure key on first run
+2. **Set manually** - Provide your own key via the `API_KEY` environment variable
+
+API calls can authenticate using either:
+- **Cookie** - Automatically handled by the dashboard after login
+- **Bearer token** - Include `Authorization: Bearer YOUR_API_KEY` header
+
+Example API call with Bearer token:
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" http://localhost:3000/api/functions
+```
+
+Note: Function execution endpoints (`/fn/{id}`) do not require authentication.
 
 ## Architecture
 

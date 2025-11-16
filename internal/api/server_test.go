@@ -72,7 +72,21 @@ func createTestServer(db DB) *Server {
 		KVStore:    kv.NewMemoryStore(),
 		EnvStore:   env.NewMemoryStore(),
 		HTTPClient: internalhttp.NewDefaultClient(),
+		APIKey:     "test-api-key",
 	})
+}
+
+// Helper function to make authenticated API requests
+func makeAuthRequest(method, path string, body []byte) *http.Request {
+	var req *http.Request
+	if body != nil {
+		req = httptest.NewRequest(method, path, bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+	} else {
+		req = httptest.NewRequest(method, path, nil)
+	}
+	req.Header.Set("Authorization", "Bearer test-api-key")
+	return req
 }
 
 func TestCreateFunction(t *testing.T) {
@@ -84,8 +98,7 @@ func TestCreateFunction(t *testing.T) {
 	}
 
 	body, _ := json.Marshal(reqBody)
-	req := httptest.NewRequest(http.MethodPost, "/api/functions", bytes.NewReader(body))
-	req.Header.Set("Content-Type", "application/json")
+	req := makeAuthRequest(http.MethodPost, "/api/functions", body)
 	w := httptest.NewRecorder()
 
 	server.Handler().ServeHTTP(w, req)
@@ -115,7 +128,7 @@ func TestListFunctions(t *testing.T) {
 	// Create a test function first
 	createTestFunction(t, db)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/functions", nil)
+	req := makeAuthRequest(http.MethodGet, "/api/functions", nil)
 	w := httptest.NewRecorder()
 
 	server.Handler().ServeHTTP(w, req)
@@ -141,7 +154,7 @@ func TestGetFunction(t *testing.T) {
 	// Create a test function first
 	fn := createTestFunction(t, db)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/functions/"+fn.ID, nil)
+	req := makeAuthRequest(http.MethodGet, "/api/functions/"+fn.ID, nil)
 	w := httptest.NewRecorder()
 
 	server.Handler().ServeHTTP(w, req)
@@ -173,8 +186,7 @@ func TestUpdateFunction(t *testing.T) {
 	}
 
 	body, _ := json.Marshal(reqBody)
-	req := httptest.NewRequest(http.MethodPut, "/api/functions/"+fn.ID, bytes.NewReader(body))
-	req.Header.Set("Content-Type", "application/json")
+	req := makeAuthRequest(http.MethodPut, "/api/functions/"+fn.ID, body)
 	w := httptest.NewRecorder()
 
 	server.Handler().ServeHTTP(w, req)
@@ -191,7 +203,7 @@ func TestDeleteFunction(t *testing.T) {
 	// Create a test function first
 	fn := createTestFunction(t, db)
 
-	req := httptest.NewRequest(http.MethodDelete, "/api/functions/"+fn.ID, nil)
+	req := makeAuthRequest(http.MethodDelete, "/api/functions/"+fn.ID, nil)
 	w := httptest.NewRecorder()
 
 	server.Handler().ServeHTTP(w, req)
@@ -209,7 +221,7 @@ func TestListVersions(t *testing.T) {
 	fn := createTestFunction(t, db)
 	createTestVersion(t, db, fn.ID, "function handler(ctx, event)\n  return {statusCode = 200}\nend")
 
-	req := httptest.NewRequest(http.MethodGet, "/api/functions/"+fn.ID+"/versions", nil)
+	req := makeAuthRequest(http.MethodGet, "/api/functions/"+fn.ID+"/versions", nil)
 	w := httptest.NewRecorder()
 
 	server.Handler().ServeHTTP(w, req)
@@ -237,7 +249,7 @@ func TestGetVersion(t *testing.T) {
 	ver := createTestVersion(t, db, fn.ID, "function handler(ctx, event)\n  return {statusCode = 201}\nend")
 
 	// Request version 2 which we just created
-	req := httptest.NewRequest(http.MethodGet, "/api/functions/"+fn.ID+"/versions/2", nil)
+	req := makeAuthRequest(http.MethodGet, "/api/functions/"+fn.ID+"/versions/2", nil)
 	w := httptest.NewRecorder()
 
 	server.Handler().ServeHTTP(w, req)
@@ -269,7 +281,7 @@ func TestActivateVersion(t *testing.T) {
 	createTestVersion(t, db, fn.ID, "function handler(ctx, event)\n  return {statusCode = 200}\nend")
 	createTestVersion(t, db, fn.ID, "function handler(ctx, event)\n  return {statusCode = 201}\nend")
 
-	req := httptest.NewRequest(http.MethodPost, "/api/functions/"+fn.ID+"/versions/1/activate", nil)
+	req := makeAuthRequest(http.MethodPost, "/api/functions/"+fn.ID+"/versions/1/activate", nil)
 	w := httptest.NewRecorder()
 
 	server.Handler().ServeHTTP(w, req)
@@ -288,7 +300,7 @@ func TestGetVersionDiff(t *testing.T) {
 	createTestVersion(t, db, fn.ID, "function handler(ctx, event)\n  return {statusCode = 200}\nend")
 	createTestVersion(t, db, fn.ID, "function handler(ctx, event)\n  return {statusCode = 201}\nend")
 
-	req := httptest.NewRequest(http.MethodGet, "/api/functions/"+fn.ID+"/diff/1/2", nil)
+	req := makeAuthRequest(http.MethodGet, "/api/functions/"+fn.ID+"/diff/1/2", nil)
 	w := httptest.NewRecorder()
 
 	server.Handler().ServeHTTP(w, req)
@@ -322,8 +334,7 @@ func TestUpdateEnvVars(t *testing.T) {
 	}
 
 	body, _ := json.Marshal(reqBody)
-	req := httptest.NewRequest(http.MethodPut, "/api/functions/"+fn.ID+"/env", bytes.NewReader(body))
-	req.Header.Set("Content-Type", "application/json")
+	req := makeAuthRequest(http.MethodPut, "/api/functions/"+fn.ID+"/env", body)
 	w := httptest.NewRecorder()
 
 	server.Handler().ServeHTTP(w, req)
@@ -342,7 +353,7 @@ func TestListExecutions(t *testing.T) {
 	ver := createTestVersion(t, db, fn.ID, "function handler(ctx, event)\n  return {statusCode = 200}\nend")
 	createTestExecution(t, db, fn.ID, ver.ID)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/functions/"+fn.ID+"/executions", nil)
+	req := makeAuthRequest(http.MethodGet, "/api/functions/"+fn.ID+"/executions", nil)
 	w := httptest.NewRecorder()
 
 	server.Handler().ServeHTTP(w, req)
@@ -366,7 +377,7 @@ func TestGetExecution(t *testing.T) {
 	ver := createTestVersion(t, db, fn.ID, "function handler(ctx, event)\n  return {statusCode = 200}\nend")
 	exec := createTestExecution(t, db, fn.ID, ver.ID)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/executions/"+exec.ID, nil)
+	req := makeAuthRequest(http.MethodGet, "/api/executions/"+exec.ID, nil)
 	w := httptest.NewRecorder()
 
 	server.Handler().ServeHTTP(w, req)
@@ -391,6 +402,7 @@ func TestGetExecutionLogs(t *testing.T) {
 		KVStore:    kv.NewMemoryStore(),
 		EnvStore:   env.NewMemoryStore(),
 		HTTPClient: internalhttp.NewDefaultClient(),
+		APIKey:     "test-api-key",
 	})
 
 	// Create a test function, version, execution
@@ -401,7 +413,7 @@ func TestGetExecutionLogs(t *testing.T) {
 	// Create a log entry for the execution using the logger
 	memLogger.Info(exec.ID, "Test log message")
 
-	req := httptest.NewRequest(http.MethodGet, "/api/executions/"+exec.ID+"/logs", nil)
+	req := makeAuthRequest(http.MethodGet, "/api/executions/"+exec.ID+"/logs", nil)
 	w := httptest.NewRecorder()
 
 	server.Handler().ServeHTTP(w, req)
@@ -429,6 +441,7 @@ func TestExecuteFunction(t *testing.T) {
 			KVStore:    kv.NewMemoryStore(),
 			EnvStore:   env.NewMemoryStore(),
 			HTTPClient: internalhttp.NewDefaultClient(),
+			APIKey:     "test-api-key",
 		})
 
 		fn := createTestFunction(t, db)
@@ -472,6 +485,7 @@ end
 			KVStore:    kv.NewMemoryStore(),
 			EnvStore:   env.NewMemoryStore(),
 			HTTPClient: internalhttp.NewDefaultClient(),
+			APIKey:     "test-api-key",
 		})
 
 		fn := createTestFunction(t, db)
@@ -510,6 +524,7 @@ end
 			KVStore:    kv.NewMemoryStore(),
 			EnvStore:   env.NewMemoryStore(),
 			HTTPClient: internalhttp.NewDefaultClient(),
+			APIKey:     "test-api-key",
 		})
 
 		fn := createTestFunction(t, db)
@@ -543,6 +558,7 @@ end
 			KVStore:    kv.NewMemoryStore(),
 			EnvStore:   env.NewMemoryStore(),
 			HTTPClient: internalhttp.NewDefaultClient(),
+			APIKey:     "test-api-key",
 		})
 
 		fn := createTestFunction(t, db)
@@ -584,6 +600,7 @@ end
 			KVStore:    kv.NewMemoryStore(),
 			EnvStore:   env.NewMemoryStore(),
 			HTTPClient: internalhttp.NewDefaultClient(),
+			APIKey:     "test-api-key",
 		})
 
 		fn := createTestFunction(t, db)
@@ -618,6 +635,7 @@ end
 			KVStore:    kv.NewMemoryStore(),
 			EnvStore:   env.NewMemoryStore(),
 			HTTPClient: internalhttp.NewDefaultClient(),
+			APIKey:     "test-api-key",
 		})
 
 		fn := createTestFunction(t, db)
@@ -661,6 +679,7 @@ end
 			KVStore:    kv.NewMemoryStore(),
 			EnvStore:   env.NewMemoryStore(),
 			HTTPClient: internalhttp.NewDefaultClient(),
+			APIKey:     "test-api-key",
 		})
 
 		req := httptest.NewRequest(http.MethodPost, "/fn/nonexistent", nil)
@@ -681,6 +700,7 @@ end
 			KVStore:    kv.NewMemoryStore(),
 			EnvStore:   env.NewMemoryStore(),
 			HTTPClient: internalhttp.NewDefaultClient(),
+			APIKey:     "test-api-key",
 		})
 
 		fn := Function{
@@ -712,6 +732,7 @@ end
 			KVStore:    kv.NewMemoryStore(),
 			EnvStore:   env.NewMemoryStore(),
 			HTTPClient: internalhttp.NewDefaultClient(),
+			APIKey:     "test-api-key",
 		})
 
 		fn := createTestFunction(t, db)
@@ -746,7 +767,7 @@ end
 func TestCORSMiddleware(t *testing.T) {
 	server := createTestServer(NewMemoryDB())
 
-	req := httptest.NewRequest(http.MethodOptions, "/api/functions", nil)
+	req := makeAuthRequest(http.MethodOptions, "/api/functions", nil)
 	w := httptest.NewRecorder()
 
 	server.Handler().ServeHTTP(w, req)

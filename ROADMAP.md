@@ -6,7 +6,6 @@ Here some ideas that I want to implement, the order is not important:
 - Email with resend
 - AI integration
   - AI functions available in lua code
-- AUTH
 - Secrets
   - Like env, but read only and not displayed in the ui
 - Choose a good name for this project
