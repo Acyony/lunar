@@ -10,12 +10,14 @@ info:
     name: FaaS API Support
 
 servers:
+  - url: /
+    description: Production server
   - url: http://localhost:3000
     description: Local development server
-  - url: http://0.0.0.0:3000
-    description: Default server
 
 tags:
+  - name: Authentication
+    description: Authentication operations
   - name: Functions
     description: Function management operations
   - name: Versions
@@ -25,7 +27,98 @@ tags:
   - name: Runtime
     description: Function execution endpoints
 
+security:
+  - CookieAuth: []
+  - BearerAuth: []
+
 paths:
+  /api/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate with API key
+      description: Validates the API key and issues an HttpOnly cookie for subsequent requests.
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            examples:
+              validLogin:
+                summary: Valid API key
+                value:
+                  apiKey: example-secret
+      responses:
+        "200":
+          description: Authentication successful
+          headers:
+            Set-Cookie:
+              description: HttpOnly authentication cookie containing the API key.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+              examples:
+                success:
+                  summary: Successful login
+                  value:
+                    success: true
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+              examples:
+                invalidBody:
+                  summary: Malformed JSON
+                  value:
+                    success: false
+                    error: Invalid request body
+        "401":
+          description: Invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+              examples:
+                invalidAPIKey:
+                  summary: Wrong key
+                  value:
+                    success: false
+                    error: Invalid API key
+
+  /api/auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Log out current session
+      description: Clears the authentication cookie.
+      operationId: logout
+      security: []
+      responses:
+        "200":
+          description: Logout successful
+          headers:
+            Set-Cookie:
+              description: Expired authentication cookie clearing the session.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+              examples:
+                success:
+                  summary: Successful logout
+                  value:
+                    success: true
+
   /api/functions:
     post:
       tags:
@@ -79,6 +172,12 @@ paths:
                   summary: Empty code
                   value:
                     error: "code: code cannot be empty"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "500":
           description: Internal server error
           content:
@@ -119,6 +218,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ListFunctionsResponse"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "500":
           description: Internal server error
           content:
@@ -149,6 +254,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FunctionWithActiveVersion"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Function not found
           content:
@@ -223,6 +334,12 @@ paths:
       responses:
         "204":
           description: Function deleted successfully
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Function not found
           content:
@@ -278,6 +395,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ListVersionsResponse"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "500":
           description: Internal server error
           content:
@@ -315,6 +438,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FunctionVersion"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Version not found
           content:
@@ -353,6 +482,12 @@ paths:
       responses:
         "200":
           description: Version activated successfully
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "500":
           description: Internal server error
           content:
@@ -396,6 +531,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/VersionDiffResponse"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "500":
           description: Internal server error
           content:
@@ -503,6 +644,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ListExecutionsResponse"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "500":
           description: Internal server error
           content:
@@ -623,6 +770,7 @@ paths:
         - X-Execution-Id: Unique ID for this execution
         - X-Execution-Duration-Ms: Execution time in milliseconds
       operationId: executeFunctionGet
+      security: []
       parameters:
         - in: query
           name: query parameters
@@ -673,6 +821,7 @@ paths:
         - X-Execution-Id: Unique ID for this execution
         - X-Execution-Duration-Ms: Execution time in milliseconds
       operationId: executeFunctionPost
+      security: []
       parameters:
         - in: query
           name: query parameters
@@ -720,6 +869,7 @@ paths:
         Executes the active version of a function with an HTTP PUT request.
         Returns custom response headers similar to GET and POST.
       operationId: executeFunctionPut
+      security: []
       parameters:
         - in: query
           name: query parameters
@@ -765,6 +915,7 @@ paths:
         Executes the active version of a function with an HTTP DELETE request.
         Returns custom response headers similar to GET and POST.
       operationId: executeFunctionDelete
+      security: []
       parameters:
         - in: query
           name: query parameters
@@ -798,7 +949,44 @@ paths:
           description: Function execution failed
 
 components:
+  securitySchemes:
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: auth_token
+      description: HttpOnly authentication cookie issued after a successful login.
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: APIKey
+      description: Provide the API key as a bearer token in the Authorization header.
+
   schemas:
+    LoginRequest:
+      type: object
+      required:
+        - apiKey
+      properties:
+        apiKey:
+          type: string
+          description: API key used to authenticate requests.
+          example: example-secret
+          minLength: 1
+
+    LoginResponse:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+          description: Indicates whether the authentication action succeeded.
+          example: true
+        error:
+          type: string
+          description: Error message when the operation fails.
+          example: Invalid API key
+
     Function:
       type: object
       required:

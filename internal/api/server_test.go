@@ -90,6 +90,48 @@ func makeAuthRequest(method, path string, body []byte) *http.Request {
 	return req
 }
 
+func TestDocsPage(t *testing.T) {
+	server := createTestServer(NewMemoryDB())
+
+	req := httptest.NewRequest(http.MethodGet, "/docs", nil)
+	w := httptest.NewRecorder()
+
+	server.Handler().ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", w.Code)
+	}
+
+	if ct := w.Header().Get("Content-Type"); ct != "text/html; charset=utf-8" {
+		t.Fatalf("expected Content-Type text/html; charset=utf-8, got %q", ct)
+	}
+
+	if w.Body.Len() == 0 {
+		t.Fatal("expected non-empty response body")
+	}
+}
+
+func TestOpenAPISpecEndpoint(t *testing.T) {
+	server := createTestServer(NewMemoryDB())
+
+	req := httptest.NewRequest(http.MethodGet, "/docs/openapi.yaml", nil)
+	w := httptest.NewRecorder()
+
+	server.Handler().ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", w.Code)
+	}
+
+	if ct := w.Header().Get("Content-Type"); ct != "application/yaml" {
+		t.Fatalf("expected Content-Type application/yaml, got %q", ct)
+	}
+
+	if !bytes.Equal(w.Body.Bytes(), openAPISpec) {
+		t.Fatal("expected response body to match embedded OpenAPI spec")
+	}
+}
+
 func TestCreateFunction(t *testing.T) {
 	server := createTestServer(NewMemoryDB())
 

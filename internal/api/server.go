@@ -66,6 +66,12 @@ func (s *Server) setupRoutes() {
 	s.mux.HandleFunc("POST /api/auth/login", HandleLogin(s.apiKey))
 	s.mux.HandleFunc("POST /api/auth/logout", HandleLogout())
 
+	// API documentation (no authentication required)
+	s.mux.HandleFunc("GET /docs", docsPageHandler)
+	s.mux.HandleFunc("HEAD /docs", docsPageHandler)
+	s.mux.HandleFunc("GET /docs/openapi.yaml", openAPISpecHandler)
+	s.mux.HandleFunc("HEAD /docs/openapi.yaml", openAPISpecHandler)
+
 	// Protected API routes - wrap with auth middleware
 	authMiddleware := AuthMiddleware(s.apiKey)
 
