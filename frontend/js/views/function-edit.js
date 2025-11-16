@@ -12,6 +12,7 @@ export const FunctionEdit = {
     description: "",
     code: "",
   },
+  errors: {},
 
   oninit: (vnode) => {
     FunctionEdit.loadFunction(vnode.attrs.id);
@@ -19,6 +20,7 @@ export const FunctionEdit = {
 
   loadFunction: async (id) => {
     FunctionEdit.loading = true;
+    FunctionEdit.errors = {};
     try {
       const func = await API.functions.get(id);
       FunctionEdit.func = func;
@@ -35,12 +37,28 @@ export const FunctionEdit = {
     }
   },
 
+  parseErrorMessage: (message) => {
+    // Parse validation error like "name: name cannot be empty"
+    const match = message.match(/^(\w+):\s*(.+)$/);
+    if (match) {
+      return { field: match[1], message: match[2] };
+    }
+    return null;
+  },
+
   saveFunction: async () => {
+    FunctionEdit.errors = {};
     try {
       await API.functions.update(FunctionEdit.func.id, FunctionEdit.formData);
       m.route.set(`/functions/${FunctionEdit.func.id}`);
     } catch (e) {
-      alert("Failed to save function");
+      const error = FunctionEdit.parseErrorMessage(e.message);
+      if (error) {
+        FunctionEdit.errors[error.field] = error.message;
+        m.redraw();
+      } else {
+        Toast.show("Failed to save function: " + e.message, "error");
+      }
     }
   },
 
@@ -76,18 +94,29 @@ export const FunctionEdit = {
               m(".form-group", [
                 m("label.form-label", "Name"),
                 m("input.form-input", {
+                  class: FunctionEdit.errors.name ? "error" : "",
                   value: FunctionEdit.formData.name,
-                  oninput: (e) => (FunctionEdit.formData.name = e.target.value),
+                  oninput: (e) => {
+                    FunctionEdit.formData.name = e.target.value;
+                    delete FunctionEdit.errors.name;
+                  },
                 }),
+                FunctionEdit.errors.name &&
+                  m("span.form-error", FunctionEdit.errors.name),
               ]),
               m(".form-group", [
                 m("label.form-label", "Description"),
                 m("textarea.form-textarea", {
+                  class: FunctionEdit.errors.description ? "error" : "",
                   value: FunctionEdit.formData.description,
-                  oninput: (e) =>
-                    (FunctionEdit.formData.description = e.target.value),
+                  oninput: (e) => {
+                    FunctionEdit.formData.description = e.target.value;
+                    delete FunctionEdit.errors.description;
+                  },
                   rows: 2,
                 }),
+                FunctionEdit.errors.description &&
+                  m("span.form-error", FunctionEdit.errors.description),
               ]),
             ]),
           ]),
@@ -100,8 +129,11 @@ export const FunctionEdit = {
                 value: FunctionEdit.formData.code,
                 onChange: (value) => {
                   FunctionEdit.formData.code = value;
+                  delete FunctionEdit.errors.code;
                 },
               }),
+              FunctionEdit.errors.code &&
+                m("span.form-error", FunctionEdit.errors.code),
             ]),
           ]),
 

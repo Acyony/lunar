@@ -60,6 +60,25 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FunctionWithActiveVersion"
+        "400":
+          description: Validation error (invalid request body or field constraints violated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                nameEmpty:
+                  summary: Empty name
+                  value:
+                    error: "name: name cannot be empty"
+                nameTooLong:
+                  summary: Name too long
+                  value:
+                    error: "name: name cannot be longer than 100 characters"
+                codeEmpty:
+                  summary: Empty code
+                  value:
+                    error: "code: code cannot be empty"
         "500":
           description: Internal server error
           content:
@@ -173,6 +192,21 @@ paths:
       responses:
         "200":
           description: Function updated successfully
+        "400":
+          description: Validation error (invalid request body or field constraints violated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                noFields:
+                  summary: No fields provided
+                  value:
+                    error: "request: at least one field must be provided for update"
+                nameEmpty:
+                  summary: Empty name
+                  value:
+                    error: "name: name cannot be empty"
         "500":
           description: Internal server error
           content:
@@ -405,6 +439,21 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FunctionVersion"
+        "400":
+          description: Validation error (invalid request body or field constraints violated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                invalidKey:
+                  summary: Invalid environment variable key
+                  value:
+                    error: "env_var_key: environment variable key can only contain letters, numbers, and underscores"
+                tooManyVars:
+                  summary: Too many environment variables
+                  value:
+                    error: "env_vars: cannot have more than 100 environment variables"
         "500":
           description: Internal server error
           content:
@@ -973,43 +1022,53 @@ components:
       properties:
         name:
           type: string
-          description: Name for the function
+          description: Name for the function (must be non-empty after trimming whitespace)
           example: "hello-world"
           minLength: 1
+          maxLength: 100
         description:
           type: string
           nullable: true
           description: Optional description
           example: "A simple hello world function"
+          maxLength: 500
         code:
           type: string
-          description: Lua code for the function
+          description: Lua code for the function (must be non-empty after trimming whitespace)
           example: |
             function handler(ctx, event)
               return {statusCode = 200, body = "Hello", headers = {}}
             end
+          minLength: 1
+          maxLength: 1048576
 
     UpdateFunctionRequest:
       type: object
+      description: At least one field must be provided
       properties:
         name:
           type: string
           nullable: true
-          description: New name for the function
+          description: New name for the function (must be non-empty after trimming whitespace)
           example: "updated-name"
+          minLength: 1
+          maxLength: 100
         description:
           type: string
           nullable: true
           description: New description
           example: "Updated description"
+          maxLength: 500
         code:
           type: string
           nullable: true
-          description: New code (creates a new version)
+          description: New code (creates a new version, must be non-empty after trimming whitespace)
           example: |
             function handler(ctx, event)
               return {statusCode = 200, body = "Updated!", headers = {}}
             end
+          minLength: 1
+          maxLength: 1048576
 
     UpdateEnvVarsRequest:
       type: object
@@ -1020,10 +1079,15 @@ components:
           type: object
           additionalProperties:
             type: string
-          description: Environment variables to set
+            maxLength: 10000
+          description: |
+            Environment variables to set (max 100 variables).
+            Keys must contain only letters, numbers, and underscores (max 100 chars).
+            Values can be up to 10,000 characters.
           example:
             API_KEY: "new-secret"
             DATABASE_URL: "postgresql://localhost/db"
+          maxProperties: 100
 
     FunctionWithActiveVersion:
       allOf:

@@ -1,0 +1,353 @@
+package api
+
+import (
+	"strings"
+	"testing"
+)
+
+func TestValidateCreateFunctionRequest(t *testing.T) {
+	tests := []struct {
+		name    string
+		req     *CreateFunctionRequest
+		wantErr bool
+		errMsg  string
+	}{
+		{
+			name: "valid request",
+			req: &CreateFunctionRequest{
+				Name: "test-function",
+				Code: "function handler() end",
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid request with description",
+			req: &CreateFunctionRequest{
+				Name:        "test-function",
+				Description: strPtr("A test function"),
+				Code:        "function handler() end",
+			},
+			wantErr: false,
+		},
+		{
+			name:    "nil request",
+			req:     nil,
+			wantErr: true,
+			errMsg:  "request cannot be nil",
+		},
+		{
+			name: "empty name",
+			req: &CreateFunctionRequest{
+				Name: "",
+				Code: "function handler() end",
+			},
+			wantErr: true,
+			errMsg:  "name cannot be empty",
+		},
+		{
+			name: "whitespace only name",
+			req: &CreateFunctionRequest{
+				Name: "   ",
+				Code: "function handler() end",
+			},
+			wantErr: true,
+			errMsg:  "name cannot be empty",
+		},
+		{
+			name: "name too long",
+			req: &CreateFunctionRequest{
+				Name: strings.Repeat("a", MaxFunctionNameLength+1),
+				Code: "function handler() end",
+			},
+			wantErr: true,
+			errMsg:  "name cannot be longer",
+		},
+		{
+			name: "empty code",
+			req: &CreateFunctionRequest{
+				Name: "test-function",
+				Code: "",
+			},
+			wantErr: true,
+			errMsg:  "code cannot be empty",
+		},
+		{
+			name: "whitespace only code",
+			req: &CreateFunctionRequest{
+				Name: "test-function",
+				Code: "   \n  \t  ",
+			},
+			wantErr: true,
+			errMsg:  "code cannot be empty",
+		},
+		{
+			name: "code too long",
+			req: &CreateFunctionRequest{
+				Name: "test-function",
+				Code: strings.Repeat("a", MaxCodeLength+1),
+			},
+			wantErr: true,
+			errMsg:  "code cannot be longer",
+		},
+		{
+			name: "description too long",
+			req: &CreateFunctionRequest{
+				Name:        "test-function",
+				Description: strPtr(strings.Repeat("a", MaxDescriptionLength+1)),
+				Code:        "function handler() end",
+			},
+			wantErr: true,
+			errMsg:  "description cannot be longer",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateCreateFunctionRequest(tt.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ValidateCreateFunctionRequest() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if err != nil && tt.errMsg != "" && !strings.Contains(err.Error(), tt.errMsg) {
+				t.Errorf("ValidateCreateFunctionRequest() error = %v, should contain %v", err, tt.errMsg)
+			}
+		})
+	}
+}
+
+func TestValidateUpdateFunctionRequest(t *testing.T) {
+	tests := []struct {
+		name    string
+		req     *UpdateFunctionRequest
+		wantErr bool
+		errMsg  string
+	}{
+		{
+			name: "valid request with name",
+			req: &UpdateFunctionRequest{
+				Name: strPtr("new-name"),
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid request with code",
+			req: &UpdateFunctionRequest{
+				Code: strPtr("function handler() end"),
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid request with all fields",
+			req: &UpdateFunctionRequest{
+				Name:        strPtr("new-name"),
+				Description: strPtr("new description"),
+				Code:        strPtr("function handler() end"),
+			},
+			wantErr: false,
+		},
+		{
+			name:    "nil request",
+			req:     nil,
+			wantErr: true,
+			errMsg:  "request cannot be nil",
+		},
+		{
+			name:    "empty request",
+			req:     &UpdateFunctionRequest{},
+			wantErr: true,
+			errMsg:  "at least one field must be provided",
+		},
+		{
+			name: "invalid name",
+			req: &UpdateFunctionRequest{
+				Name: strPtr(""),
+			},
+			wantErr: true,
+			errMsg:  "name cannot be empty",
+		},
+		{
+			name: "invalid code",
+			req: &UpdateFunctionRequest{
+				Code: strPtr(""),
+			},
+			wantErr: true,
+			errMsg:  "code cannot be empty",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateUpdateFunctionRequest(tt.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ValidateUpdateFunctionRequest() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if err != nil && tt.errMsg != "" && !strings.Contains(err.Error(), tt.errMsg) {
+				t.Errorf("ValidateUpdateFunctionRequest() error = %v, should contain %v", err, tt.errMsg)
+			}
+		})
+	}
+}
+
+func TestValidateUpdateEnvVarsRequest(t *testing.T) {
+	tests := []struct {
+		name    string
+		req     *UpdateEnvVarsRequest
+		wantErr bool
+		errMsg  string
+	}{
+		{
+			name: "valid request",
+			req: &UpdateEnvVarsRequest{
+				EnvVars: map[string]string{
+					"API_KEY": "secret",
+					"PORT":    "3000",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid empty env vars",
+			req: &UpdateEnvVarsRequest{
+				EnvVars: map[string]string{},
+			},
+			wantErr: false,
+		},
+		{
+			name:    "nil request",
+			req:     nil,
+			wantErr: true,
+			errMsg:  "request cannot be nil",
+		},
+		{
+			name: "nil env vars",
+			req: &UpdateEnvVarsRequest{
+				EnvVars: nil,
+			},
+			wantErr: true,
+			errMsg:  "env_vars cannot be nil",
+		},
+		{
+			name: "invalid env var key - empty",
+			req: &UpdateEnvVarsRequest{
+				EnvVars: map[string]string{
+					"": "value",
+				},
+			},
+			wantErr: true,
+			errMsg:  "key cannot be empty",
+		},
+		{
+			name: "invalid env var key - special chars",
+			req: &UpdateEnvVarsRequest{
+				EnvVars: map[string]string{
+					"API-KEY": "value",
+				},
+			},
+			wantErr: true,
+			errMsg:  "can only contain letters, numbers, and underscores",
+		},
+		{
+			name: "invalid env var key - too long",
+			req: &UpdateEnvVarsRequest{
+				EnvVars: map[string]string{
+					strings.Repeat("A", MaxEnvVarKeyLength+1): "value",
+				},
+			},
+			wantErr: true,
+			errMsg:  "key cannot be longer",
+		},
+		{
+			name: "invalid env var value - empty",
+			req: &UpdateEnvVarsRequest{
+				EnvVars: map[string]string{
+					"KEY": "",
+				},
+			},
+			wantErr: true,
+			errMsg:  "value cannot be empty",
+		},
+		{
+			name: "invalid env var value - whitespace only",
+			req: &UpdateEnvVarsRequest{
+				EnvVars: map[string]string{
+					"KEY": "   ",
+				},
+			},
+			wantErr: true,
+			errMsg:  "value cannot be empty",
+		},
+		{
+			name: "invalid env var value - too long",
+			req: &UpdateEnvVarsRequest{
+				EnvVars: map[string]string{
+					"KEY": strings.Repeat("a", MaxEnvVarValueLength+1),
+				},
+			},
+			wantErr: true,
+			errMsg:  "value cannot be longer",
+		},
+		{
+			name: "too many env vars",
+			req: &UpdateEnvVarsRequest{
+				EnvVars: func() map[string]string {
+					m := make(map[string]string)
+					for i := 0; i < MaxEnvVars+1; i++ {
+						m[strings.Repeat("A", i%10+1)+string(rune(i))] = "value"
+					}
+					return m
+				}(),
+			},
+			wantErr: true,
+			errMsg:  "cannot have more than",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateUpdateEnvVarsRequest(tt.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ValidateUpdateEnvVarsRequest() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if err != nil && tt.errMsg != "" && !strings.Contains(err.Error(), tt.errMsg) {
+				t.Errorf("ValidateUpdateEnvVarsRequest() error = %v, should contain %v", err, tt.errMsg)
+			}
+		})
+	}
+}
+
+func TestIsValidEnvVarKey(t *testing.T) {
+	tests := []struct {
+		key   string
+		valid bool
+	}{
+		{"API_KEY", true},
+		{"PORT", true},
+		{"DB_HOST_1", true},
+		{"_PRIVATE", true},
+		{"snake_case_key", true},
+		{"UPPERCASE_KEY", true},
+		{"MixedCase123", true},
+		{"", false},
+		{"API-KEY", false},
+		{"API.KEY", false},
+		{"API KEY", false},
+		{"API@KEY", false},
+		{"123", true},
+		{"_123", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.key, func(t *testing.T) {
+			if got := isValidEnvVarKey(tt.key); got != tt.valid {
+				t.Errorf("isValidEnvVarKey(%q) = %v, want %v", tt.key, got, tt.valid)
+			}
+		})
+	}
+}
+
+// Helper function for creating string pointers
+func strPtr(s string) *string {
+	return &s
+}

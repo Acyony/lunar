@@ -345,6 +345,24 @@ pre {
     min-height: 100px;
 }
 
+/* Form Validation Errors */
+.form-input.error,
+.form-textarea.error {
+    border-color: #f48771;
+}
+
+.form-input.error:focus,
+.form-textarea.error:focus {
+    border-color: #f48771;
+}
+
+.form-error {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: #f48771;
+}
+
 /* Code Editor */
 .CodeMirror {
     border: 1px solid #3e3e42;

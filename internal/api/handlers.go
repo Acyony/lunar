@@ -31,7 +31,7 @@ type ExecuteFunctionDeps struct {
 
 // Helper functions
 
-func writeJSON(w http.ResponseWriter, status int, data interface{}) {
+func writeJSON(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	if err := json.NewEncoder(w).Encode(data); err != nil {
@@ -51,7 +51,8 @@ func parsePaginationParams(r *http.Request) PaginationParams {
 
 	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
 		if limit, err := strconv.Atoi(limitStr); err == nil && limit > 0 {
-			params.Limit = limit
+			// Enforce maximum page size
+			params.Limit = min(limit, MaxPageSize)
 		}
 	}
 
@@ -98,6 +99,12 @@ func CreateFunctionHandler(db DB) http.HandlerFunc {
 		var req CreateFunctionRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			writeError(w, http.StatusBadRequest, "Invalid request body")
+			return
+		}
+
+		// Validate request
+		if err := ValidateCreateFunctionRequest(&req); err != nil {
+			writeError(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -219,6 +226,12 @@ func UpdateFunctionHandler(db DB) http.HandlerFunc {
 			return
 		}
 
+		// Validate request
+		if err := ValidateUpdateFunctionRequest(&req); err != nil {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
 		// If code is provided, create a new version
 		if req.Code != nil {
 			_, err := db.CreateVersion(r.Context(), id, *req.Code, nil)
@@ -263,6 +276,12 @@ func UpdateEnvVarsHandler(db DB, envStore env.Store) http.HandlerFunc {
 		var req UpdateEnvVarsRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			writeError(w, http.StatusBadRequest, "Invalid request body")
+			return
+		}
+
+		// Validate request
+		if err := ValidateUpdateEnvVarsRequest(&req); err != nil {
+			writeError(w, http.StatusBadRequest, err.Error())
 			return
 		}
 

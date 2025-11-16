@@ -21,8 +21,6 @@ export const FunctionDetail = {
   testResponse: null,
   testLogs: [],
   selectedVersions: [],
-  envVars: [],
-  savingEnv: false,
   versionsLimit: 20,
   versionsOffset: 0,
   versionsTotal: 0,
@@ -62,9 +60,6 @@ export const FunctionDetail = {
       FunctionDetail.versionsTotal = versions.pagination?.total || 0;
       FunctionDetail.executions = executions.executions || [];
       FunctionDetail.executionsTotal = executions.pagination?.total || 0;
-      FunctionDetail.envVars = Object.entries(func.env_vars || {}).map(
-        ([key, value]) => ({ key, value }),
-      );
     } catch (e) {
       console.error("Failed to load function:", e);
     } finally {
@@ -168,26 +163,6 @@ export const FunctionDetail = {
     }
   },
 
-  saveEnvVars: async () => {
-    FunctionDetail.savingEnv = true;
-    try {
-      const env_vars = {};
-      FunctionDetail.envVars.forEach((envVar) => {
-        if (envVar.key && envVar.value) {
-          env_vars[envVar.key] = envVar.value;
-        }
-      });
-
-      await API.functions.updateEnv(FunctionDetail.func.id, env_vars);
-      Toast.show("Environment variables updated", "success");
-      FunctionDetail.loadData(FunctionDetail.func.id);
-    } catch (e) {
-      Toast.show("Failed to update environment variables", "error");
-    } finally {
-      FunctionDetail.savingEnv = false;
-    }
-  },
-
   view: (vnode) => {
     if (FunctionDetail.loading) {
       return m(".loading", "Loading...");
@@ -231,7 +206,7 @@ export const FunctionDetail = {
             class: FunctionDetail.activeTab === "env" ? "active" : "",
             onclick: () => FunctionDetail.setTab("env"),
           },
-          `Environment (${FunctionDetail.envVars.length})`,
+          `Environment (${Object.keys(FunctionDetail.func.env_vars || {}).length})`,
         ),
         m(
           "a.tab",
@@ -748,79 +723,50 @@ export const FunctionDetail = {
           m(".main-column", [
             m(".card", [
               m(".card-header", [
-                m(".card-title", "Environment Variables"),
-                m(".actions", [
+                m("div", [
+                  m(".card-title", "Environment Variables"),
                   m(
-                    "button.btn.btn-primary",
-                    {
-                      onclick: FunctionDetail.saveEnvVars,
-                      disabled: FunctionDetail.savingEnv,
-                    },
-                    FunctionDetail.savingEnv ? "Saving..." : "Save Changes",
-                  ),
-                  m(
-                    "button.btn.btn-icon",
-                    {
-                      onclick: () =>
-                        FunctionDetail.envVars.push({ key: "", value: "" }),
-                    },
-                    Icons.plus(),
+                    ".card-subtitle",
+                    `${Object.keys(FunctionDetail.func.env_vars || {}).length} variables`,
                   ),
                 ]),
+                m(
+                  "a.btn.btn-primary",
+                  { href: `#!/functions/${FunctionDetail.func.id}/env` },
+                  "Manage Variables",
+                ),
               ]),
-              FunctionDetail.envVars.length === 0
+              Object.keys(FunctionDetail.func.env_vars || {}).length === 0
                 ? m(
                     ".text-center",
                     { style: "color: #858585; padding: 48px 0;" },
-                    "No environment variables. Click + to add one.",
+                    "No environment variables configured.",
                   )
-                : m("table", [
-                    m("thead", [
-                      m("tr", [
-                        m("th", { style: "width: 30%;" }, "Key"),
-                        m("th", "Value"),
+                : m("div", { style: "padding: 24px;" }, [
+                    Object.entries(FunctionDetail.func.env_vars).map(
+                      ([key, value]) =>
                         m(
-                          "th",
-                          { style: "width: 60px; text-align: center;" },
-                          "",
-                        ),
-                      ]),
-                    ]),
-                    m(
-                      "tbody",
-                      FunctionDetail.envVars.map((envVar, i) =>
-                        m("tr", { key: i }, [
-                          m("td", [
-                            m("input.form-input", {
-                              value: envVar.key,
-                              oninput: (e) => (envVar.key = e.target.value),
-                              placeholder: "KEY",
-                              style:
-                                "font-family: var(--font-mono); text-transform: uppercase; width: 100%;",
-                            }),
-                          ]),
-                          m("td", [
-                            m("input.form-input", {
-                              value: envVar.value,
-                              oninput: (e) => (envVar.value = e.target.value),
-                              placeholder: "value",
-                              style:
-                                "font-family: var(--font-mono); width: 100%;",
-                            }),
-                          ]),
-                          m("td", { style: "text-align: center;" }, [
+                          "div",
+                          {
+                            key: key,
+                            style:
+                              "display: flex; gap: 12px; margin-bottom: 8px; font-family: var(--font-mono); font-size: 13px;",
+                          },
+                          [
                             m(
-                              "button.btn.btn-icon",
-                              {
-                                onclick: () =>
-                                  FunctionDetail.envVars.splice(i, 1),
-                                title: "Delete",
-                              },
-                              Icons.xMark(),
+                              "div",
+                              { style: "color: #858585; min-width: 150px;" },
+                              key,
                             ),
-                          ]),
-                        ]),
-                      ),
+                            m(
+                              "div",
+                              {
+                                style: "color: #cccccc; word-break: break-all;",
+                              },
+                              value,
+                            ),
+                          ],
+                        ),
                     ),
                   ]),
             ]),

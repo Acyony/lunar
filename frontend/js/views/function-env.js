@@ -7,6 +7,7 @@ export const FunctionEnv = {
   envVars: [],
   loading: true,
   saving: false,
+  errors: {},
 
   oninit: (vnode) => {
     FunctionEnv.loadData(vnode.attrs.id);
@@ -14,6 +15,7 @@ export const FunctionEnv = {
 
   loadData: async (id) => {
     FunctionEnv.loading = true;
+    FunctionEnv.errors = {};
     try {
       const func = await API.functions.get(id);
       FunctionEnv.func = func;
@@ -28,13 +30,30 @@ export const FunctionEnv = {
     }
   },
 
+  parseErrorMessage: (message) => {
+    // Parse validation error like "env_var_key: environment variable key cannot be empty"
+    const match = message.match(/^(\w+):\s*(.+)$/);
+    if (match) {
+      return { field: match[1], message: match[2] };
+    }
+    return null;
+  },
+
   saveEnvVars: async () => {
     FunctionEnv.saving = true;
+    FunctionEnv.errors = {};
+
     try {
       const env_vars = {};
+      // Send all env vars to backend for validation, including those with empty keys
+      // This allows backend validation to catch invalid keys
       FunctionEnv.envVars.forEach((envVar) => {
-        if (envVar.key && envVar.value) {
-          env_vars[envVar.key] = envVar.value;
+        // Include all rows, even with empty values, so backend can validate
+        const key = envVar.key || "";
+        const value = envVar.value || "";
+        if (key || value) {
+          // Only skip completely empty rows
+          env_vars[key] = value;
         }
       });
 
@@ -42,7 +61,18 @@ export const FunctionEnv = {
       Toast.show("Environment variables updated", "success");
       m.route.set(`/functions/${FunctionEnv.func.id}`);
     } catch (e) {
-      Toast.show("Failed to update environment variables", "error");
+      const error = FunctionEnv.parseErrorMessage(e.message);
+      if (error) {
+        FunctionEnv.errors.general = error.message;
+      } else {
+        Toast.show(
+          "Failed to update environment variables: " + e.message,
+          "error",
+        );
+      }
+      // Keep envVars array intact - don't reload from server
+      // This preserves user's input
+      m.redraw();
     } finally {
       FunctionEnv.saving = false;
     }
@@ -86,6 +116,10 @@ export const FunctionEnv = {
           ),
         ]),
         m("div", { style: "padding: 24px;" }, [
+          FunctionEnv.errors.general &&
+            m("div", { style: "margin-bottom: 16px;" }, [
+              m("span.form-error", FunctionEnv.errors.general),
+            ]),
           FunctionEnv.envVars.length === 0
             ? m(
                 ".text-center",
@@ -102,13 +136,19 @@ export const FunctionEnv = {
                   [
                     m("input.form-input", {
                       value: envVar.key,
-                      oninput: (e) => (envVar.key = e.target.value),
+                      oninput: (e) => {
+                        envVar.key = e.target.value;
+                        delete FunctionEnv.errors.general;
+                      },
                       placeholder: "KEY",
                       style: "flex: 1;",
                     }),
                     m("input.form-input", {
                       value: envVar.value,
-                      oninput: (e) => (envVar.value = e.target.value),
+                      oninput: (e) => {
+                        envVar.value = e.target.value;
+                        delete FunctionEnv.errors.general;
+                      },
                       placeholder: "value",
                       style: "flex: 1;",
                     }),

@@ -18,6 +18,7 @@ export const FunctionCreate = {
   }
 end`,
   },
+  errors: {},
 
   oninit: () => {
     FunctionCreate.formData = {
@@ -33,9 +34,20 @@ end`,
   }
 end`,
     };
+    FunctionCreate.errors = {};
+  },
+
+  parseErrorMessage: (message) => {
+    // Parse validation error like "name: name cannot be empty"
+    const match = message.match(/^(\w+):\s*(.+)$/);
+    if (match) {
+      return { field: match[1], message: match[2] };
+    }
+    return null;
   },
 
   createFunction: async () => {
+    FunctionCreate.errors = {};
     try {
       const payload = {
         name: FunctionCreate.formData.name,
@@ -46,7 +58,13 @@ end`,
       await API.functions.create(payload);
       m.route.set("/functions");
     } catch (e) {
-      alert("Failed to create function: " + e.message);
+      const error = FunctionCreate.parseErrorMessage(e.message);
+      if (error) {
+        FunctionCreate.errors[error.field] = error.message;
+        m.redraw();
+      } else {
+        Toast.show("Failed to create function: " + e.message, "error");
+      }
     }
   },
 
@@ -71,22 +89,31 @@ end`,
               m(".form-group", [
                 m("label.form-label", "Name"),
                 m("input.form-input", {
+                  class: FunctionCreate.errors.name ? "error" : "",
                   value: FunctionCreate.formData.name,
-                  oninput: (e) =>
-                    (FunctionCreate.formData.name = e.target.value),
+                  oninput: (e) => {
+                    FunctionCreate.formData.name = e.target.value;
+                    delete FunctionCreate.errors.name;
+                  },
                   placeholder: "my-function",
-                  required: true,
                 }),
+                FunctionCreate.errors.name &&
+                  m("span.form-error", FunctionCreate.errors.name),
               ]),
               m(".form-group", [
                 m("label.form-label", "Description"),
                 m("textarea.form-textarea", {
+                  class: FunctionCreate.errors.description ? "error" : "",
                   value: FunctionCreate.formData.description,
-                  oninput: (e) =>
-                    (FunctionCreate.formData.description = e.target.value),
+                  oninput: (e) => {
+                    FunctionCreate.formData.description = e.target.value;
+                    delete FunctionCreate.errors.description;
+                  },
                   placeholder: "What does this function do?",
                   rows: 2,
                 }),
+                FunctionCreate.errors.description &&
+                  m("span.form-error", FunctionCreate.errors.description),
               ]),
             ]),
           ]),
@@ -99,8 +126,11 @@ end`,
                 value: FunctionCreate.formData.code,
                 onChange: (value) => {
                   FunctionCreate.formData.code = value;
+                  delete FunctionCreate.errors.code;
                 },
               }),
+              FunctionCreate.errors.code &&
+                m("span.form-error", FunctionCreate.errors.code),
             ]),
           ]),
 
@@ -116,7 +146,6 @@ end`,
                 "button.btn.btn-primary",
                 {
                   onclick: FunctionCreate.createFunction,
-                  disabled: !FunctionCreate.formData.name,
                 },
                 "Create Function",
               ),

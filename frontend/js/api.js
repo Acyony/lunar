@@ -1,10 +1,22 @@
 // Helper to add credentials to all requests
 const apiRequest = (config) => {
-  return m.request({
-    ...config,
-    // Include cookies in requests
-    credentials: "same-origin",
-  });
+  return m
+    .request({
+      ...config,
+      // Include cookies in requests
+      credentials: "same-origin",
+    })
+    .catch((err) => {
+      // Mithril parses JSON responses automatically
+      // On error, err.response contains the parsed JSON body
+      if (err.response && err.response.error) {
+        // Throw a proper Error object with the error message
+        const error = new Error(err.response.error);
+        error.code = err.code;
+        throw error;
+      }
+      throw err;
+    });
 };
 
 // Global error handler for auth failures
