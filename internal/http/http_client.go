@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 // Headers represents HTTP headers as a map of string key-value pairs
@@ -65,10 +66,18 @@ type DefaultClient struct {
 	client *http.Client
 }
 
-// NewDefaultClient creates a new default HTTP client
+// NewDefaultClient creates a new default HTTP client with timeout and connection pooling
 func NewDefaultClient() *DefaultClient {
 	return &DefaultClient{
-		client: &http.Client{},
+		client: &http.Client{
+			Timeout: 30 * time.Second,
+			Transport: &http.Transport{
+				MaxIdleConns:        100,
+				MaxIdleConnsPerHost: 10,
+				MaxConnsPerHost:     100,
+				IdleConnTimeout:     90 * time.Second,
+			},
+		},
 	}
 }
 

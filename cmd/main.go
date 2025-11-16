@@ -1,10 +1,14 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"log/slog"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
+	"time"
 
 	"github.com/dimiro1/faas-go/frontend"
 	"github.com/dimiro1/faas-go/internal/api"
@@ -89,7 +93,36 @@ func main() {
 		"execution_timeout", config.ExecutionTimeout)
 	slog.Info("Frontend available", "url", "http://localhost:"+config.Port)
 	slog.Info("API available", "url", "http://localhost:"+config.Port+"/api")
-	if err := server.ListenAndServe(addr); err != nil {
+
+	// Setup graceful shutdown
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
+
+	// Start server in a goroutine
+	serverErr := make(chan error, 1)
+	go func() {
+		if err := server.ListenAndServe(addr); err != nil {
+			serverErr <- err
+		}
+	}()
+
+	// Wait for shutdown signal or server error
+	select {
+	case sig := <-shutdown:
+		slog.Info("Shutdown signal received", "signal", sig)
+
+		// Give active connections 30 seconds to complete
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
+		slog.Info("Shutting down server gracefully...")
+		if err := server.Shutdown(ctx); err != nil {
+			slog.Error("Error during shutdown", "error", err)
+			os.Exit(1)
+		}
+		slog.Info("Server stopped gracefully")
+
+	case err := <-serverErr:
 		slog.Error("Server failed", "error", err)
 		os.Exit(1)
 	}

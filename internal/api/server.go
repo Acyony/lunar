@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -18,6 +19,7 @@ type Server struct {
 	logger          logger.Logger
 	frontendHandler http.Handler
 	apiKey          string
+	httpServer      *http.Server
 }
 
 // ServerConfig holds configuration for creating a Server
@@ -111,5 +113,17 @@ func (s *Server) Handler() http.Handler {
 
 // ListenAndServe starts the HTTP server on the specified address
 func (s *Server) ListenAndServe(addr string) error {
-	return http.ListenAndServe(addr, s.Handler())
+	s.httpServer = &http.Server{
+		Addr:    addr,
+		Handler: s.Handler(),
+	}
+	return s.httpServer.ListenAndServe()
+}
+
+// Shutdown gracefully shuts down the server without interrupting active connections
+func (s *Server) Shutdown(ctx context.Context) error {
+	if s.httpServer != nil {
+		return s.httpServer.Shutdown(ctx)
+	}
+	return nil
 }
