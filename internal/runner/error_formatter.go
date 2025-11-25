@@ -180,10 +180,11 @@ func formatEnhancedError(errMsg string, lineNum int, codeContext, suggestion str
 		msg.WriteString(fmt.Sprintf("Error: %s\n", cleanErrorMessage(errMsg)))
 	}
 
-	// Code context
+	// Code context with markers for frontend parsing
 	if codeContext != "" {
-		msg.WriteString("\n")
+		msg.WriteString("\n[CODE]\n")
 		msg.WriteString(codeContext)
+		msg.WriteString("[/CODE]\n")
 	}
 
 	// Suggestion

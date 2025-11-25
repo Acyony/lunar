@@ -155,18 +155,65 @@ export const ExecutionDetail = {
         // Error Details
         exec.status === "error" &&
           exec.error_message &&
-          m(Card, { variant: CardVariant.DANGER, style: "margin-bottom: 1.5rem" }, [
-            m(CardHeader, {
-              title: "Execution Error",
-              icon: "exclamationTriangle",
-              variant: CardVariant.DANGER,
-            }),
-            m(CardContent, [
-              m("pre.error-message", {
-                style: "max-height: 500px; overflow-y: auto; white-space: pre-wrap; font-family: monospace; margin: 0; padding: 1rem; background: var(--color-background); border-radius: 6px;"
-              }, exec.error_message),
-            ]),
-          ]),
+          (() => {
+            // Parse error message sections
+            const parts = exec.error_message.split(/\[CODE\]|\[\/CODE\]/);
+            const errorDescription = parts[0] || "";
+            const codeSnippet = parts[1] || "";
+            const tipSection = parts[2] || "";
+
+            // Only trim trailing whitespace to preserve line number alignment
+            const trimmedCode = codeSnippet
+              .replace(/^\n+/, "")
+              .replace(/\n+$/, "");
+
+            return m(
+              Card,
+              { variant: CardVariant.DANGER, style: "margin-bottom: 1.5rem" },
+              [
+                m(CardHeader, {
+                  title: "Execution Error",
+                  icon: "exclamationTriangle",
+                  variant: CardVariant.DANGER,
+                }),
+                m(CardContent, [
+                  // Error description
+                  errorDescription &&
+                    m(
+                      "pre.error-description",
+                      {
+                        style:
+                          "white-space: pre-wrap; font-family: monospace; margin: 0 0 1rem 0;",
+                      },
+                      errorDescription.trim(),
+                    ),
+
+                  // Code snippet with line numbers and syntax highlighting
+                  trimmedCode &&
+                    m("div", { style: "margin: 1rem 0;" }, [
+                      m(CodeViewer, {
+                        code: trimmedCode,
+                        language: "lua",
+                        maxHeight: "300px",
+                        noBorder: false,
+                        padded: true,
+                      }),
+                    ]),
+
+                  // Tip section
+                  tipSection &&
+                    m(
+                      "pre.error-tip",
+                      {
+                        style:
+                          "white-space: pre-wrap; font-family: monospace; margin: 1rem 0 0 0; padding: 1rem; background: var(--color-background); border-radius: 6px;",
+                      },
+                      tipSection.trim(),
+                    ),
+                ]),
+              ],
+            );
+          })(),
 
         // Event Data
         exec.event_json &&
