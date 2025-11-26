@@ -26,7 +26,7 @@ import { icons } from "../icons.js";
  */
 export const Tabs = {
   /**
-   * Renders the tabs component.
+   * Renders the tab component.
    * @param {Object} vnode - Mithril vnode
    * @param {Object} vnode.attrs - Component attributes
    * @param {TabDefinition[]} [vnode.attrs.tabs=[]] - Array of tab definitions
@@ -114,6 +114,7 @@ export const TabContent = {
    * @param {string} [vnode.attrs.id] - Tab panel ID (links to tab via aria-controls)
    * @param {boolean} [vnode.attrs.active=false] - Whether this panel is visible
    * @param {string} [vnode.attrs.class] - Additional CSS classes
+   * @param {*} vnode.children - Child elements to render
    * @returns {Object} Mithril vnode
    */
   view(vnode) {
@@ -139,5 +140,3 @@ export const TabContent = {
     );
   },
 };
-
-export default Tabs;

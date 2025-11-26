@@ -11,7 +11,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableEmpty,
   TableHead,
   TableHeader,
   TableRow,
@@ -28,7 +27,7 @@ import {
  */
 
 /**
- * Functions list view component.
+ * Functions list a view component.
  * Displays a paginated table of all functions.
  * @type {Object}
  */

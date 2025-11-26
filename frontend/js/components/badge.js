@@ -50,6 +50,7 @@ export const Badge = {
    * @param {IconName} [vnode.attrs.iconRight] - Icon name for right icon
    * @param {string} [vnode.attrs.href] - If provided, renders as anchor
    * @param {string} [vnode.attrs.class] - Additional CSS classes
+   * @param {*} vnode.children - Child elements to render
    * @returns {Object} Mithril vnode
    */
   view(vnode) {
@@ -97,7 +98,7 @@ export const Badge = {
 };
 
 /**
- * ID Badge component - displays an ID with hashtag icon.
+ * ID Badge component - displays an ID with a hashtag icon.
  * @type {Object}
  */
 export const IDBadge = {
@@ -224,5 +225,3 @@ export const LogLevelBadge = {
     );
   },
 };
-
-export default Badge;

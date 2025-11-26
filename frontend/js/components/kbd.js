@@ -16,6 +16,7 @@ export const Kbd = {
    * @param {Object} vnode.attrs - Component attributes
    * @param {boolean} [vnode.attrs.small=false] - Small size variant
    * @param {string} [vnode.attrs.class] - Additional CSS classes
+   * @param {*} vnode.children - Child elements to render
    * @returns {Object} Mithril vnode
    */
   view(vnode) {
@@ -62,5 +63,3 @@ export const Separator = {
     return m("div", { class: classes, "aria-hidden": "true" });
   },
 };
-
-export default { Kbd, Separator };

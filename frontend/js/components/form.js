@@ -18,6 +18,7 @@ export const FormGroup = {
    * @param {Object} vnode - Mithril vnode
    * @param {Object} vnode.attrs - Component attributes
    * @param {string} [vnode.attrs.class] - Additional CSS classes
+   * @param {*} vnode.children - Child elements to render
    * @returns {Object} Mithril vnode
    */
   view(vnode) {
@@ -195,6 +196,7 @@ export const PasswordInput = {
    * @param {boolean} [vnode.attrs.required=false] - Required field
    * @param {(e: Event) => void} [vnode.attrs.oninput] - Input handler
    * @param {string} [vnode.attrs.class] - Additional CSS classes
+   * @param {state} vnode.state - Component state { visible: boolean }
    * @returns {Object} Mithril vnode
    */
   view(vnode) {
@@ -256,7 +258,7 @@ export const PasswordInput = {
 };
 
 /**
- * Copy Input with copy to clipboard button.
+ * Copy Input with the copy-to-clipboard button.
  * @type {Object}
  */
 export const CopyInput = {
@@ -279,6 +281,7 @@ export const CopyInput = {
    * @param {boolean} [vnode.attrs.disabled=false] - Disabled state
    * @param {boolean} [vnode.attrs.readonly=true] - Read-only state
    * @param {string} [vnode.attrs.class] - Additional CSS classes
+   * @param {state} vnode.state - Component state { copied: boolean }
    * @returns {Object} Mithril vnode
    */
   view(vnode) {
@@ -480,7 +483,7 @@ export const FormSelect = {
 };
 
 /**
- * Form Checkbox component.
+ * Checkbox component.
  * @type {Object}
  */
 export const FormCheckbox = {
@@ -542,7 +545,7 @@ export const FormCheckbox = {
 };
 
 /**
- * Form Help Text component.
+ * Help Text component.
  * @type {Object}
  */
 export const FormHelp = {
@@ -554,6 +557,7 @@ export const FormHelp = {
    * @param {boolean} [vnode.attrs.error=false] - Error styling
    * @param {boolean} [vnode.attrs.success=false] - Success styling
    * @param {string} [vnode.attrs.class] - Additional CSS classes
+   * @param {*} vnode.children - Child elements to render (alternative to text)
    * @returns {Object} Mithril vnode
    */
   view(vnode) {
@@ -576,16 +580,4 @@ export const FormHelp = {
 
     return m("p", { class: classes, ...attrs }, text || vnode.children);
   },
-};
-
-export default {
-  FormGroup,
-  FormLabel,
-  FormInput,
-  PasswordInput,
-  CopyInput,
-  FormTextarea,
-  FormSelect,
-  FormCheckbox,
-  FormHelp,
 };

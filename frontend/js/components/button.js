@@ -54,6 +54,7 @@ export const Button = {
    * @param {IconName} [vnode.attrs.iconRight] - Icon name for right icon
    * @param {string} [vnode.attrs.class] - Additional CSS classes
    * @param {string} [vnode.attrs.ariaLabel] - Aria label for accessibility
+   * @param {*} vnode.children - Child elements to render
    * @returns {Object} Mithril vnode
    */
   view(vnode) {
@@ -136,7 +137,7 @@ export const BackButton = {
    * Renders the back button.
    * @param {Object} vnode - Mithril vnode
    * @param {Object} vnode.attrs - Component attributes
-   * @param {string} [vnode.attrs.href='#!/'] - Back link URL
+   * @param {string} [vnode.attrs.href='#!/'] - Backlink URL
    * @returns {Object} Mithril vnode
    */
   view(vnode) {
@@ -145,5 +146,3 @@ export const BackButton = {
     return m("a.back-btn", { href }, [m.trust(icons.chevronLeft()), "Back"]);
   },
 };
-
-export default Button;

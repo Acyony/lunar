@@ -20,6 +20,7 @@ export const Table = {
    * @param {boolean} [vnode.attrs.hoverable=true] - Enable row hover effects
    * @param {boolean} [vnode.attrs.striped=false] - Enable striped rows
    * @param {string} [vnode.attrs.class] - Additional CSS classes
+   * @param {*} vnode.children - Child elements to render (TableHeader, TableBody)
    * @returns {Object} Mithril vnode
    */
   view(vnode) {
@@ -56,6 +57,7 @@ export const TableHeader = {
    * @param {Object} vnode - Mithril vnode
    * @param {Object} vnode.attrs - Component attributes
    * @param {string} [vnode.attrs.class] - Additional CSS classes
+   * @param {*} vnode.children - Child elements to render (TableRow)
    * @returns {Object} Mithril vnode
    */
   view(vnode) {
@@ -81,6 +83,7 @@ export const TableBody = {
    * @param {Object} vnode - Mithril vnode
    * @param {Object} vnode.attrs - Component attributes
    * @param {string} [vnode.attrs.class] - Additional CSS classes
+   * @param {*} vnode.children - Child elements to render (TableRow)
    * @returns {Object} Mithril vnode
    */
   view(vnode) {
@@ -108,6 +111,7 @@ export const TableRow = {
    * @param {boolean} [vnode.attrs.selected=false] - Whether row is selected
    * @param {() => void} [vnode.attrs.onclick] - Click handler
    * @param {string} [vnode.attrs.class] - Additional CSS classes
+   * @param {*} vnode.children - Child elements to render (TableHead, TableCell)
    * @returns {Object} Mithril vnode
    */
   view(vnode) {
@@ -148,8 +152,9 @@ export const TableHead = {
    * Renders the table head cell.
    * @param {Object} vnode - Mithril vnode
    * @param {Object} vnode.attrs - Component attributes
-   * @param {string} [vnode.attrs.width] - Column width (e.g., "200px", "20%")
+   * @param {string} [vnode.attrs.width] - Column width (e.g., "200 px", "20%")
    * @param {string} [vnode.attrs.class] - Additional CSS classes
+   * @param {*} vnode.children - Child elements to render
    * @returns {Object} Mithril vnode
    */
   view(vnode) {
@@ -180,6 +185,7 @@ export const TableCell = {
    * @param {boolean} [vnode.attrs.mono=false] - Use monospace font
    * @param {('left'|'center'|'right')} [vnode.attrs.align] - Text alignment
    * @param {string} [vnode.attrs.class] - Additional CSS classes
+   * @param {*} vnode.children - Child elements to render
    * @returns {Object} Mithril vnode
    */
   view(vnode) {
@@ -212,7 +218,7 @@ export const TableCell = {
 };
 
 /**
- * Table Empty state component - displayed when table has no data.
+ * Table Empty state component - displayed when the table has no data.
  * @type {Object}
  */
 export const TableEmpty = {
@@ -281,15 +287,4 @@ export const TableHeaderRow = {
       }),
     );
   },
-};
-
-export default {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-  TableEmpty,
-  TableHeaderRow,
 };

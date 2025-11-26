@@ -54,7 +54,7 @@ export const FunctionCode = {
   activeApiSection: "handler",
 
   /**
-   * Edited code (null if unchanged from saved version).
+   * Edited code (null if unchanged from a saved version).
    * @type {string|null}
    */
   editedCode: null,
@@ -98,7 +98,7 @@ export const FunctionCode = {
       });
       Toast.show("Code saved successfully", "success");
       FunctionCode.editedCode = null;
-      FunctionCode.loadFunction(FunctionCode.func.id);
+      await FunctionCode.loadFunction(FunctionCode.func.id);
     } catch (e) {
       Toast.show("Failed to save code: " + e.message, "error");
     }
@@ -106,10 +106,10 @@ export const FunctionCode = {
 
   /**
    * Renders the function code editor view.
-   * @param {Object} vnode - Mithril vnode
+   * @param {Object} _vnode - Mithril vnode
    * @returns {Object} Mithril vnode
    */
-  view: (vnode) => {
+  view: (_vnode) => {
     if (FunctionCode.loading) {
       return m(".loading", [
         m.trust(icons.spinner()),

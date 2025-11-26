@@ -86,6 +86,7 @@ export const TemplateCards = {
    * @param {Object} vnode - Mithril vnode
    * @param {Object} vnode.attrs - Component attributes
    * @param {string} [vnode.attrs.class] - Additional CSS classes
+   * @param {*} vnode.children - Child elements to render (TemplateCard)
    * @returns {Object} Mithril vnode
    */
   view(vnode) {
@@ -229,9 +230,3 @@ function handler(ctx, event)
 end`,
   },
 ];
-
-export default {
-  TemplateCard,
-  TemplateCards,
-  FunctionTemplates,
-};

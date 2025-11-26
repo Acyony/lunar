@@ -32,6 +32,7 @@ export const Card = {
    * @param {string} [vnode.attrs.variant='default'] - Color variant from CardVariant
    * @param {boolean} [vnode.attrs.padded=false] - Add padding to card body
    * @param {string} [vnode.attrs.class] - Additional CSS classes
+   * @param {*} vnode.children - Child elements to render
    * @returns {Object} Mithril vnode
    */
   view(vnode) {
@@ -69,6 +70,7 @@ export const CardHeader = {
    * @param {IconName} [vnode.attrs.icon] - Optional icon name
    * @param {string} [vnode.attrs.variant='default'] - Color variant from CardVariant
    * @param {string} [vnode.attrs.class] - Additional CSS classes
+   * @param {*} vnode.children - Child elements to render (e.g., action buttons)
    * @returns {Object} Mithril vnode
    */
   view(vnode) {
@@ -131,6 +133,7 @@ export const CardContent = {
    * @param {boolean} [vnode.attrs.large=false] - Large padding
    * @param {boolean} [vnode.attrs.noPadding=false] - Remove padding
    * @param {string} [vnode.attrs.class] - Additional CSS classes
+   * @param {*} vnode.children - Child elements to render
    * @returns {Object} Mithril vnode
    */
   view(vnode) {
@@ -166,6 +169,7 @@ export const CardFooter = {
    * @param {Object} vnode - Mithril vnode
    * @param {Object} vnode.attrs - Component attributes
    * @param {string} [vnode.attrs.class] - Additional CSS classes
+   * @param {*} vnode.children - Child elements to render
    * @returns {Object} Mithril vnode
    */
   view(vnode) {
@@ -195,5 +199,3 @@ export const CardDivider = {
     return m("hr.card__divider");
   },
 };
-
-export default Card;

@@ -22,8 +22,8 @@ export const LineType = {
  * @typedef {Object} DiffLine
  * @property {string} type - Line type (added, removed, unchanged)
  * @property {string} content - Line content
- * @property {number} oldLine - Line number in old version (0 if added)
- * @property {number} newLine - Line number in new version (0 if removed)
+ * @property {number} oldLine - Line number in an old version (0 if added)
+ * @property {number} newLine - Line number in a new version (0 if removed)
  */
 
 /**

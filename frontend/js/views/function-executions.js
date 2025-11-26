@@ -149,10 +149,10 @@ export const FunctionExecutions = {
 
   /**
    * Renders the function executions view.
-   * @param {Object} vnode - Mithril vnode
+   * @param {Object} _vnode - Mithril vnode
    * @returns {Object} Mithril vnode
    */
-  view: (vnode) => {
+  view: (_vnode) => {
     if (FunctionExecutions.loading) {
       return m(".loading", [
         m.trust(icons.spinner()),

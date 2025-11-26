@@ -10,7 +10,6 @@ import {
   FormHelp,
   FormInput,
   FormLabel,
-  FormTextarea,
 } from "../components/form.js";
 import {
   FunctionTemplates,
@@ -70,7 +69,7 @@ export const FunctionCreate = {
     };
     FunctionCreate.errors = {};
     FunctionCreate.selectedTemplate = "http";
-    // Set initial code from default template
+    // Set initial code from the default template
     const template = FunctionTemplates.find((t) => t.id === "http");
     if (template) {
       FunctionCreate.formData.code = template.code;
@@ -92,7 +91,7 @@ export const FunctionCreate = {
   /**
    * Parses an error message into field and message.
    * @param {string} message - Error message in "field: message" format
-   * @returns {ParsedError|null} Parsed error or null if format doesn't match
+   * @returns {ParsedError|null} Parsed error or null if a format doesn't match
    */
   parseErrorMessage: (message) => {
     const match = message.match(/^(\w+):\s*(.+)$/);

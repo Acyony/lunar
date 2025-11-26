@@ -136,10 +136,10 @@ export const FunctionTest = {
 
   /**
    * Renders the function test view.
-   * @param {Object} vnode - Mithril vnode
+   * @param {Object} _vnode - Mithril vnode
    * @returns {Object} Mithril vnode
    */
-  view: (vnode) => {
+  view: (_vnode) => {
     if (FunctionTest.loading) {
       return m(".loading", [
         m.trust(icons.spinner()),

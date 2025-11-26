@@ -52,6 +52,10 @@ export const VersionDiff = {
   /**
    * Initializes the view and loads diff data.
    * @param {Object} vnode - Mithril vnode
+   * @param {Object} vnode.attrs - Mithril vnode attributes
+   * @param {string} vnode.attrs.id - Function ID
+   * @param {number} vnode.attrs.v1 - First version number
+   * @param {number} vnode.attrs.v2 - Second version number
    */
   oninit: (vnode) => {
     VersionDiff.loadData(vnode.attrs.id, vnode.attrs.v1, vnode.attrs.v2);

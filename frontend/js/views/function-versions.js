@@ -45,7 +45,7 @@ import { TabContent, Tabs } from "../components/tabs.js";
 
 /**
  * Function versions view component.
- * Displays version history with ability to activate versions and compare diffs.
+ * Displays version history with the ability to activate versions and compare diffs.
  * @type {Object}
  */
 export const FunctionVersions = {
@@ -194,14 +194,14 @@ export const FunctionVersions = {
     try {
       await API.versions.activate(FunctionVersions.func.id, version);
       Toast.show(`Version ${version} activated`, "success");
-      FunctionVersions.loadData(FunctionVersions.func.id);
+      await FunctionVersions.loadData(FunctionVersions.func.id);
     } catch (e) {
       Toast.show("Failed to activate version", "error");
     }
   },
 
   /**
-   * Navigates to version diff view for selected versions.
+   * Navigates to the version diff view for selected versions.
    */
   compareVersions: () => {
     if (FunctionVersions.selectedVersions.length !== 2) return;
@@ -211,10 +211,10 @@ export const FunctionVersions = {
 
   /**
    * Renders the function versions view.
-   * @param {Object} vnode - Mithril vnode
+   * @param {Object} _vnode - Mithril vnode
    * @returns {Object} Mithril vnode
    */
-  view: (vnode) => {
+  view: (_vnode) => {
     if (FunctionVersions.loading) {
       return m(".loading", [
         m.trust(icons.spinner()),

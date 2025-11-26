@@ -26,6 +26,7 @@ export const Navbar = {
    * @param {Object} vnode - Mithril vnode
    * @param {Object} vnode.attrs - Component attributes
    * @param {string} [vnode.attrs.class] - Additional CSS classes
+   * @param {*} vnode.children - Child elements to render
    * @returns {Object} Mithril vnode
    */
   view(vnode) {
@@ -52,6 +53,7 @@ export const NavbarSection = {
    * @param {Object} vnode - Mithril vnode
    * @param {Object} vnode.attrs - Component attributes
    * @param {string} [vnode.attrs.class] - Additional CSS classes
+   * @param {*} vnode.children - Child elements to render
    * @returns {Object} Mithril vnode
    */
   view(vnode) {
@@ -295,15 +297,4 @@ export const Header = {
       ]),
     ]);
   },
-};
-
-export default {
-  Navbar,
-  NavbarSection,
-  NavbarBrand,
-  NavbarBreadcrumb,
-  NavbarSearch,
-  NavbarDivider,
-  NavbarAction,
-  Header,
 };

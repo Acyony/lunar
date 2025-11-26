@@ -230,7 +230,7 @@ export const ExecutionDetail = {
         exec.error_message &&
         (() => {
           // Parse error message sections
-          const parts = exec.error_message.split(/\[CODE\]|\[\/CODE\]/);
+          const parts = exec.error_message.split(/\[CODE]|\[\/CODE]/);
           const errorDescription = parts[0] || "";
           const codeSnippet = parts[1] || "";
           const tipSection = parts[2] || "";

@@ -28,7 +28,7 @@ import {
  */
 
 /**
- * Request builder component for testing functions.
+ * Request a builder component for testing functions.
  * Provides a form interface for building and sending HTTP requests.
  * @type {Object}
  */

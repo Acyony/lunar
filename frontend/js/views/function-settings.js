@@ -176,7 +176,7 @@ export const FunctionSettings = {
 
       await API.functions.updateEnv(FunctionSettings.func.id, env_vars);
       Toast.show("Environment variables updated", "success");
-      FunctionSettings.loadFunction(FunctionSettings.func.id);
+      await FunctionSettings.loadFunction(FunctionSettings.func.id);
     } catch (e) {
       FunctionSettings.envErrors.general = e.message;
       m.redraw();
@@ -216,7 +216,7 @@ export const FunctionSettings = {
 
       await API.functions.update(FunctionSettings.func.id, updates);
       Toast.show("Settings saved successfully", "success");
-      FunctionSettings.loadFunction(FunctionSettings.func.id);
+      await FunctionSettings.loadFunction(FunctionSettings.func.id);
     } catch (e) {
       Toast.show("Failed to save settings: " + e.message, "error");
     }
@@ -265,7 +265,7 @@ export const FunctionSettings = {
       });
       const action = FunctionSettings.editedDisabled ? "disabled" : "enabled";
       Toast.show(`Function ${action} successfully`, "success");
-      FunctionSettings.loadFunction(FunctionSettings.func.id);
+      await FunctionSettings.loadFunction(FunctionSettings.func.id);
     } catch (e) {
       Toast.show("Failed to update status: " + e.message, "error");
     }
@@ -273,10 +273,10 @@ export const FunctionSettings = {
 
   /**
    * Renders the function settings view.
-   * @param {Object} vnode - Mithril vnode
+   * @param {Object} _vnode - Mithril vnode
    * @returns {Object} Mithril vnode
    */
-  view: (vnode) => {
+  view: (_vnode) => {
     if (FunctionSettings.loading) {
       return m(".loading", [
         m.trust(icons.spinner()),
