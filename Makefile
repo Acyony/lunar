@@ -1,17 +1,20 @@
-.PHONY: build test lint clean run help dev install-tools fmt-frontend
+.PHONY: build test lint clean run help dev install-tools fmt-frontend test-frontend test-e2e test-all
 
 BINARY_NAME=faas-go
 BUILD_DIR=build
 
 help:
 	@echo "Available targets:"
-	@echo "  build        - Build the application"
-	@echo "  test         - Run all tests"
-	@echo "  lint         - Run golangci-lint"
-	@echo "  clean        - Remove build artifacts"
-	@echo "  run          - Build and run the application"
-	@echo "  all          - Run lint, test, and build"
-	@echo "  fmt-frontend - Format frontend JS files with deno fmt"
+	@echo "  build         - Build the application"
+	@echo "  test          - Run Go unit tests"
+	@echo "  test-frontend - Open Jasmine frontend tests in browser"
+	@echo "  test-e2e      - Run E2E tests with headless Chrome"
+	@echo "  test-all      - Run all tests (unit + e2e)"
+	@echo "  lint          - Run golangci-lint"
+	@echo "  clean         - Remove build artifacts"
+	@echo "  run           - Build and run the application"
+	@echo "  all           - Run lint, test, and build"
+	@echo "  fmt-frontend  - Format frontend JS files with deno fmt"
 
 build:
 	@echo "Building..."
@@ -48,3 +51,14 @@ install-tools:
 fmt-frontend:
 	@echo "Formatting frontend..."
 	@deno fmt frontend/
+
+test-frontend:
+	@go run ./cmd/testserver
+
+test-e2e:
+	@echo "Running E2E tests with headless Chrome..."
+	@go test -v ./e2e/...
+
+test-all: test test-e2e
+	@echo "All Go tests passed!"
+	@echo "Run 'make test-frontend' to open browser tests manually"

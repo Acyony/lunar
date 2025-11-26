@@ -45,8 +45,7 @@ export const VersionLabels = {
    * @returns {Object} Mithril vnode
    */
   view(vnode) {
-    const { oldLabel, newLabel, oldMeta, newMeta, additions, deletions } =
-      vnode.attrs;
+    const { additions, deletions } = vnode.attrs;
 
     return m(".diff-version-labels", [
       m("span.diff-stats-summary", [
@@ -125,7 +124,7 @@ const DiffLine = {
    * @returns {Object} Mithril vnode
    */
   view(vnode) {
-    const { line, language } = vnode.attrs;
+    const { line } = vnode.attrs;
     const lineClass = `diff-line--${line.type}`;
 
     return m("tr", { class: lineClass }, [

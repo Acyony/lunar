@@ -192,6 +192,51 @@ curl -H "Authorization: Bearer YOUR_API_KEY" http://localhost:3000/api/functions
 
 Note: Function execution endpoints (`/fn/{id}`) do not require authentication.
 
+## Testing
+
+### Go Tests
+
+Run the Go unit tests:
+
+```bash
+make test
+```
+
+### Frontend Tests (Jasmine)
+
+The frontend uses [Jasmine](https://jasmine.github.io/) for unit testing, running directly in the browser without Node.js dependencies.
+
+```bash
+make test-frontend
+```
+
+This starts a local Go server and opens the test runner at `http://localhost:8888/test/SpecRunner.html`. Tests cover:
+
+- Route URL generators
+- UI components (Button, Badge, Table, Pagination, ...)
+
+### E2E Tests (chromedp)
+
+End-to-end tests use [chromedp](https://github.com/chromedp/chromedp) to run a headless Chrome browser:
+
+```bash
+make test-e2e
+```
+
+E2E tests cover:
+
+- Login flow
+- Page navigation
+- Functions list rendering
+
+### Run All Tests
+
+```bash
+make test-all
+```
+
+This runs Go unit tests and E2E tests. Run `make test-frontend` separately to open the browser-based Jasmine tests.
+
 ## Architecture
 
 * **Backend** - Go with standard library HTTP server, SQLite database

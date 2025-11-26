@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>FaaS-Go Frontend Tests</title>
+
+    <!-- Jasmine CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/jasmine-core@5.4.0/lib/jasmine-core/jasmine.css"
+    >
+
+    <!-- Jasmine Core -->
+    <script
+      src="https://unpkg.com/jasmine-core@5.4.0/lib/jasmine-core/jasmine.js"
+    ></script>
+    <script
+      src="https://unpkg.com/jasmine-core@5.4.0/lib/jasmine-core/jasmine-html.js"
+    ></script>
+    <script
+      src="https://unpkg.com/jasmine-core@5.4.0/lib/jasmine-core/boot0.js"
+    ></script>
+    <script
+      src="https://unpkg.com/jasmine-core@5.4.0/lib/jasmine-core/boot1.js"
+    ></script>
+
+    <!-- Mithril (same version as app) -->
+    <script src="https://unpkg.com/mithril@2.3.7/mithril.min.js"></script>
+
+    <!-- Test Helpers - regular script to ensure synchronous loading -->
+    <script>
+      /**
+       * Helper to extract class string from a Mithril vnode.
+       * Handles both attrs.class and className, plus selector-based classes.
+       */
+      function getVnodeClass(vnode) {
+        if (!vnode) return "";
+        // Check attrs.class or attrs.className
+        if (vnode.attrs) {
+          if (typeof vnode.attrs.class === "string") {
+            return vnode.attrs.class;
+          }
+          if (typeof vnode.attrs.className === "string") {
+            return vnode.attrs.className;
+          }
+        }
+        // Check if class is in the tag selector (e.g., "div.foo" -> tag contains class)
+        if (typeof vnode.tag === "string" && vnode.tag.includes(".")) {
+          return vnode.tag.split(".").slice(1).join(" ");
+        }
+        return "";
+      }
+
+      /**
+       * Helper to check if vnode has a specific class
+       */
+      function hasClass(vnode, className) {
+        const classes = getVnodeClass(vnode);
+        return classes.split(/\s+/).includes(className);
+      }
+
+      /**
+       * Helper to check if class string contains a substring
+       */
+      function classContains(vnode, substring) {
+        return getVnodeClass(vnode).includes(substring);
+      }
+
+      // Custom Jasmine matcher for vnodes
+      beforeEach(function () {
+        jasmine.addMatchers({
+          toHaveClass: function (util) {
+            return {
+              compare: function (vnode, expected) {
+                const classes = getVnodeClass(vnode);
+                const pass = classes.includes(expected);
+                return {
+                  pass,
+                  message: pass
+                    ? `Expected vnode not to have class '${expected}'`
+                    : `Expected vnode to have class '${expected}' but got '${classes}'`,
+                };
+              },
+            };
+          },
+        });
+      });
+    </script>
+
+    <!-- Spec files (ES modules) -->
+    <script type="module" src="spec/routes.spec.js"></script>
+    <script type="module" src="spec/utils.spec.js"></script>
+    <script type="module" src="spec/components/badge.spec.js"></script>
+    <script type="module" src="spec/components/button.spec.js"></script>
+    <script type="module" src="spec/components/card.spec.js"></script>
+    <script type="module" src="spec/components/code-editor.spec.js"></script>
+    <script type="module" src="spec/components/code-viewer.spec.js"></script>
+    <script
+      type="module"
+      src="spec/components/command-palette.spec.js"
+    ></script>
+    <script type="module" src="spec/components/diff-viewer.spec.js"></script>
+    <script type="module" src="spec/components/env-editor.spec.js"></script>
+    <script type="module" src="spec/components/form.spec.js"></script>
+    <script type="module" src="spec/components/kbd.spec.js"></script>
+    <script type="module" src="spec/components/log-viewer.spec.js"></script>
+    <script type="module" src="spec/components/navbar.spec.js"></script>
+    <script type="module" src="spec/components/pagination.spec.js"></script>
+    <script
+      type="module"
+      src="spec/components/request-builder.spec.js"
+    ></script>
+    <script type="module" src="spec/components/table.spec.js"></script>
+    <script type="module" src="spec/components/tabs.spec.js"></script>
+    <script type="module" src="spec/components/template-card.spec.js"></script>
+    <script type="module" src="spec/components/toast.spec.js"></script>
+  </head>
+  <body></body>
+</html>
