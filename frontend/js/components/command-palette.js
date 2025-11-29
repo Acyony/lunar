@@ -5,14 +5,14 @@
 import { icons } from "../icons.js";
 import { API } from "../api.js";
 import { paths } from "../routes.js";
-import { t } from "../i18n/index.js";
+import { i18n, localeNames, t } from "../i18n/index.js";
 
 /**
  * @typedef {import('../types.js').LunarFunction} lunarFunction
  */
 
 /**
- * @typedef {('nav'|'function'|'action')} CommandItemType
+ * @typedef {('nav'|'function'|'action'|'language')} CommandItemType
  */
 
 /**
@@ -20,10 +20,11 @@ import { t } from "../i18n/index.js";
  * @property {CommandItemType} type - Type of command item
  * @property {string} label - Display label
  * @property {string} [description] - Optional description
- * @property {string} path - Navigation path
+ * @property {string} [path] - Navigation path
  * @property {string} icon - Icon name from icons module
  * @property {string} [id] - Function ID (for function/action types)
  * @property {boolean} [disabled] - Whether the function is disabled
+ * @property {string} [locale] - Locale code (for language type)
  */
 
 /**
@@ -190,8 +191,22 @@ export const CommandPalette = {
       });
     });
 
+    // Language items
+    const currentLocale = i18n.getLocale();
+    const languageItems = i18n.getAvailableLocales().map((locale) => ({
+      type: "language",
+      label: `${t("commandPalette.actions.switchLanguage")} → ${
+        localeNames[locale]
+      }`,
+      description: locale === currentLocale
+        ? t("commandPalette.currentLanguage")
+        : "",
+      icon: "globe",
+      locale: locale,
+    }));
+
     // Combine and filter
-    const allItems = [...navItems, ...functionItems];
+    const allItems = [...navItems, ...languageItems, ...functionItems];
 
     if (q) {
       CommandPalette.results = allItems.filter(
@@ -231,7 +246,7 @@ export const CommandPalette = {
    * @param {KeyboardEvent} e - Keyboard event
    */
   handleKeyDown: (e) => {
-    if (e.key === "ArrowDown") {
+    if (e.key === "ArrowDown" || (e.ctrlKey && e.key === "n")) {
       e.preventDefault();
       CommandPalette.selectedIndex = Math.min(
         CommandPalette.selectedIndex + 1,
@@ -239,7 +254,7 @@ export const CommandPalette = {
       );
       m.redraw();
       CommandPalette.scrollToSelected();
-    } else if (e.key === "ArrowUp") {
+    } else if (e.key === "ArrowUp" || (e.ctrlKey && e.key === "p")) {
       e.preventDefault();
       CommandPalette.selectedIndex = Math.max(
         CommandPalette.selectedIndex - 1,
@@ -259,12 +274,16 @@ export const CommandPalette = {
   },
 
   /**
-   * Selects an item and navigates to its path.
+   * Selects an item and navigates to its path or performs its action.
    * @param {CommandItem} item - The item to select
    */
   selectItem: (item) => {
     CommandPalette.close();
-    m.route.set(item.path);
+    if (item.type === "language") {
+      i18n.setLocale(item.locale);
+    } else {
+      m.route.set(item.path);
+    }
   },
 
   /**

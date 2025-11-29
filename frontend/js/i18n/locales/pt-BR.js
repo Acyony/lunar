@@ -180,7 +180,9 @@ export default {
       viewExecutions: "Ver logs de execução",
       configureFunction: "Configurar função",
       testFunction: "Testar função",
+      switchLanguage: "Mudar idioma",
     },
+    currentLanguage: "(atual)",
   },
 
   // Toast notifications

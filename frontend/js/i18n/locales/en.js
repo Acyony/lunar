@@ -178,7 +178,9 @@ export default {
       viewExecutions: "View execution logs",
       configureFunction: "Configure function",
       testFunction: "Test function",
+      switchLanguage: "Switch language",
     },
+    currentLanguage: "(current)",
   },
 
   // Toast notifications
