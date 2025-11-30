@@ -83,10 +83,12 @@ export const RequestBuilder = {
             options: methods,
             selected: method,
             onchange: (e) => onMethodChange && onMethodChange(e.target.value),
+            ["aria-label"]: t("requestBuilder.method"),
           }),
           m(CopyInput, {
             value: url + (query ? `?${query}` : ""),
             mono: true,
+            ["aria-label"]: t("requestBuilder.requestUrl"),
           }),
         ]),
 
@@ -98,6 +100,7 @@ export const RequestBuilder = {
             placeholder: "key=value&other=value",
             mono: true,
             oninput: (e) => onQueryChange && onQueryChange(e.target.value),
+            ["aria-label"]: t("requestBuilder.labelUrl"),
           }),
         ]),
 
@@ -109,6 +112,7 @@ export const RequestBuilder = {
             rows: 2,
             mono: true,
             oninput: (e) => onHeadersChange && onHeadersChange(e.target.value),
+            ["aria-label"]: t("requestBuilder.headers"),
           }),
         ]),
 
@@ -120,6 +124,7 @@ export const RequestBuilder = {
             rows: 4,
             mono: true,
             oninput: (e) => onBodyChange && onBodyChange(e.target.value),
+            ["aria-label"]: t("requestBuilder.requestBody"),
           }),
         ]),
 
