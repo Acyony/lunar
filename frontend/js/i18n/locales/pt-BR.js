@@ -113,6 +113,7 @@ export default {
   settings: {
     generalConfig: "Configuração Geral",
     functionName: "Nome da Função",
+    functionDescriprion: "descrição da função",
     description: "Descrição",
     logRetention: "Período de Retenção de Logs",
     retentionHelp:
@@ -370,9 +371,6 @@ export default {
     copied: "Copiado!",
     copyToClipboard: "Copiar para área de transferência",
     checkBox: "checkbox",
-    functionName: "nome da função",
-    functionDescriprion: "descrição da função",
-    invocationURL: "URL de Invocação",
   },
 
   // Log viewer
