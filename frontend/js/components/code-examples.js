@@ -159,6 +159,7 @@ func main() {
           m(
             "select.form-select",
             {
+              "aria-label": t("test.selectLanguage"),
               value: CodeExamples.selectedLang,
               onchange: (e) => {
                 CodeExamples.selectedLang = e.target.value;
