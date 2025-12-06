@@ -345,8 +345,7 @@ export default {
     subtitle: "Chame esta função a partir da sua aplicação",
     copied: "Copiado!",
     copyToClipboard: "Copiar para área de transferência",
-    selectLanguage: "a linguagem seleciona é"
-
+    selectLanguage: "a linguagem seleciona é",
   },
 
   // Email request viewer
